@@ -19,7 +19,7 @@ Imports:
     bootstrap,
     coda,
     ggplot2
-Suggests:knitr, 
+Suggests: knitr, 
     microbenchmark,
     rmarkdown,
     testthat (>= 3.0.0)
@@ -28,8 +28,5 @@ Depends:
     R (>= 3.10)
 LazyData: true
 VignetteBuilder: knitr
-
-
-
-
-
+URL: https://github.com/mekuanintsimeneh/BL22204009
+BugReports: https://github.com/mekuanintsimeneh/BL22204009/issues
