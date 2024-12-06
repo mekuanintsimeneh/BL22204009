@@ -8,6 +8,14 @@
 \description{
 Several R and Rcpp function are included in this package for illustration.
 }
+\seealso{
+Useful links:
+\itemize{
+  \item \url{https://github.com/mekuanintsimeneh/BL22204009}
+  \item Report bugs at \url{https://github.com/mekuanintsimeneh/BL22204009/issues}
+}
+
+}
 \author{
 \strong{Maintainer}: Mekuanint Simeneh \email{mekuanintsimeneh@gmail.com} (\href{https://orcid.org/YOUR-ORCID-ID}{ORCID})
 
