@@ -1,0 +1,35 @@
+Package: BL22204009
+Title: Statistical computing with R
+Version: 0.0.0.9000
+Authors@R: 
+    person("Mekuanint", "Simeneh", , "mekuanintsimeneh@gmail.com", role = c("aut", "cre"),
+           comment = c(ORCID = "YOUR-ORCID-ID"))
+Description: Several R and Rcpp function are included in this package for illustration. 
+License: AGPL (>= 3)
+Encoding: UTF-8
+Roxygen: list(markdown = TRUE)
+RoxygenNote: 7.3.2
+LinkingTo: 
+    Rcpp
+Imports: 
+    Rcpp,
+    DAAG,
+    MASS,
+    boot,
+    bootstrap,
+    coda,
+    ggplot2
+Suggests:knitr, 
+    microbenchmark,
+    rmarkdown,
+    testthat (>= 3.0.0)
+Config/testthat/edition: 3
+Depends:
+    R (>= 3.10)
+LazyData: true
+VignetteBuilder: knitr
+
+
+
+
+

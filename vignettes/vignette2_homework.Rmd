@@ -1,0 +1,1993 @@
+---
+title: "homework Answer"
+author: 'BL22204009'
+date: "2024/12/6"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{homework Answer}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+##  Bivariate Confidence Ellipse Function 
+
+## Introduction
+
+The bivCI function is designed to calculate the joint confidence ellipse for the mean of a bivariate normal distribution. This ellipse is commonly used in statistics to represent the region within which the true mean of a bivariate distribution lies with a specified confidence level (e.g., 95% or 99%). The function uses the covariance matrix of the sample and its sample mean vector to compute the confidence region.
+
+This function calculates the coordinates of a confidence ellipse for a bivariate mean based on the covariance matrix, sample size, and confidence level. It returns the coordinates of the ellipse as a set of (x, y) points.
+```{r}
+bivCI <- function(s, xbar, n, alpha, m) {
+  # returns m (x,y) coordinates of 1-alpha joint confidence ellipse of mean
+  # m points on a unit circle
+  x <- sin(2 * pi * (0 : (m - 1)) / (m - 1)) 
+  y <- cos(2 * pi * (0 : (m - 1)) / (m - 1)) 
+  # chi-squared critical value for 2 degrees of freedom
+  cv <- qchisq(1 - alpha, 2) 
+  cv <- cv / n # value of quadratic form
+  # Transform points to form ellipse
+  for (i in 1 : m) {
+    pair <- c(x[i], y[i]) # ith (x, y) pair
+    q <- pair %*% solve(s, pair) # quadratic form
+    x[i] <- x[i] * sqrt(cv / q) + xbar[1] # scale and translate
+    y[i] <- y[i] * sqrt(cv / q) + xbar[2] # scale and translate
+  }
+  # Return the (x, y) coordinates of the ellipse
+  cbind(x, y)
+}
+# Example usage:
+# Assume biv is a bivariate dataset (matrix with two columns for X and Y)
+set.seed(123)
+biv <- matrix(rnorm(200), ncol = 2)  # Example bivariate data
+# Plot the bivariate data
+plot(biv, col = "red", pch = 16, cex.lab = 1.5)
+# Plot the 99% joint confidence ellipse (alpha = 0.01)
+lines(bivCI(s = var(biv), xbar = colMeans(biv), n = dim(biv)[1], alpha = .01, m = 1000),
+      type = "l", col = "blue")
+# Plot the 95% joint confidence ellipse (alpha = 0.05)
+lines(bivCI(s = var(biv), xbar = colMeans(biv), n = dim(biv)[1], alpha = .05, m = 1000),
+      type = "l", col = "green", lwd = 1)
+# Add the sample mean as a "+" sign
+points(colMeans(biv)[1], colMeans(biv)[2], pch = 3, cex = .8, col = "black")
+
+covEllipse <- function(mean, cov_matrix, level = 0.95, n = 100) {
+  # Computes and plots the confidence ellipse for bivariate normal data
+  # Eigen decomposition of the covariance matrix
+  eig <- eigen(cov_matrix)
+  eigenvalues <- eig$values
+  eigenvectors <- eig$vectors
+  # Compute the critical value from the chi-squared distribution
+  chi_sq_value <- qchisq(level, df = 2)
+  # Create points on a unit circle
+  theta <- seq(0, 2 * pi, length.out = n)
+  ellipse_points <- cbind(cos(theta), sin(theta))
+  # Scale and rotate the ellipse points
+  ellipse_points <- ellipse_points %*% sqrt(chi_sq_value * diag(eigenvalues))
+  ellipse_points <- ellipse_points %*% t(eigenvectors)
+ # Translate the ellipse to the mean
+  ellipse_points <- sweep(ellipse_points, 2, mean)
+  # Plot the ellipse
+  plot(ellipse_points, type = "l", col = "blue", xlab = "X", ylab = "Y")
+}
+# Example usage:
+mean_vector <- c(0, 0) # Mean vector
+cov_matrix <- matrix(c(1, 0.8, 0.8, 1), nrow = 2) # Covariance matrix
+covEllipse(mean = mean_vector, cov_matrix = cov_matrix, level = 0.95, n = 1000)
+
+```
+
+## HW0
+
+Go through “R for Beginners” if you are not familiar with R
+ programming.
+ Use knitr to produce at least 3 examples. For each example,
+ texts should mix with figures and/or tables. Better to have
+ mathematical formulas
+
+## HW0: answers 
+
+String Manipulation
+```{r}
+x <- "Hello, World!";x
+# Combine x
+y <- c(x, "Welcome to R programming langouage!");y # Display the y 
+# Display the properties of x
+mode(x)
+# Dispaly the length of y
+length(y)
+```
+Numeric Assignments and Sequences
+```{r}
+# Directly assign number to x1
+x1 <- 15
+# Use the seq() function to generate a sequence of regular numbers
+y1 <- seq(15,25,by=1)
+# creat  matrix 
+z <- matrix(23:31,nrow = 3,ncol = 3)
+# Display x1,y1 and z
+x1;y1;z
+# Determine whether z is a array
+is.array(z)
+```
+Sample Data Generation for Students
+```{r}
+# Generate sample data
+set.seed(123)  # For reproducibility
+Age <- floor(rnorm(10, mean = 23, sd = 2))
+Score <- floor(rnorm(10, mean = 75, sd = 10))  # Closing parenthesis added
+# Display the data frame
+my_table<-data.frame(Age, Score)
+knitr::kable(my_table, caption = "Student Data")
+```
+## Formulae
+```{r}
+# Load the InsectSprays dataset
+data(InsectSprays)
+# Perform ANOVA with square-root transformation of the count
+aov.spray <- aov(sqrt(count) ~ spray, data = InsectSprays)
+# Print a brief summary of the ANOVA results
+print(aov.spray)
+# Display a detailed summary of the ANOVA results
+summary(aov.spray)
+ plot(aov.spray)
+
+```
+Linear Regression Model`
+```{r}
+# Generate sample data
+set.seed(456)
+x <- 1:100
+y <- 2*x + rnorm(100, mean = 0, sd = 10)
+# Fit a linear model
+model <- lm(y ~ x)
+# Summary of the model
+model_summary <- summary(model)
+
+```
+
+## HW1 
+
+## Exercises 3.4, 3.11, and 3.20 (pages 94-96, Statistical Computating with R)
+
+```{r setup}
+library(BL22204009)
+```
+
+## Ex.3.4:answer
+Applying the inverse of the cumulative distribution function (CDF) for the Rayleigh distribution to these uniform numbers to get the desired samples. Sampling algorithm state here:
+1. Generate a uniform random number \( U \sim \text{Uniform}(0, 1) \).
+2. Calculate the inverse CDF for the Rayleigh distribution:
+   \(
+   X = \sigma \sqrt{-2 \log(1 - U)}
+   \)
+3. Repeat the process to generate a sample size \( n \).
+
+This is the code of rayleigh density
+```{r}
+# Function to generate Rayleigh-distributed random variables
+rrayleigh = function (size, sigma) {
+  stopifnot(sigma > 0)       # Ensure sigma is positive
+  u = runif(size)            # Generate uniform random numbers
+  sigma*sqrt(-2*log(1 - u))  # Inverse CDF transformation
+}
+# Function to compute the PDF of the Rayleigh distribution
+drayleigh = function (x, sigma) {
+  stopifnot(sigma > 0)        # Ensure sigma is positive
+  y = x / (sigma^2) * exp(- x^2 / (2 * sigma^2))   # PDF formula
+  y[x < 0] = 0  # Set PDF to 0 for negative values
+  y
+}
+
+```
+```{r}
+n <- 10000
+u <-runif(n)
+for(sigma in c(1,5,10,50,100,1000)){
+x<-sigma*sqrt(-2*log(1-u))#F(x)=1-exp(-x^2/(2*sigma^2)),x>=0
+hist(x, prob = TRUE, main= paste("Sigma =", sigma))
+# Add density curve
+curve(drayleigh(x, sigma), add = TRUE, col = "red", lwd = 2)
+}
+```
+
+we take $\sigma$=1,$\sigma$=5,$\sigma$=10,$\sigma$=50,$\sigma$=100,$\sigma$=1000 respectively，the empirical distribution of the sample is still close to the true distribution
+
+## Ex3.11:Answer
+
+The goal is to generate a random sample from a mixture of two normal distributions: \(N(0, 1)\) and \(N(3, 1)\) using specified mixing probabilities \(p_1\) and \(p_2 = 1 - p_1\).
+1. Generate \( u \sim \text{Uniform}(0, 1) \).
+2. If \( u \leq p_1 \), generate \( x \) from \( N(0, 1) \); otherwise, generate \( x \) from \( N(3, 1) \).
+The following figure corresponds to the histogram generated by \( p_1 \) with different values:
+
+```{r}
+# Set parameters
+n <- 1000
+u <- runif(n)
+# Loop through p1 values
+for (p1 in c(0.25, 0.5, 0.75, 0.95)) {
+  x <- numeric(n)  # Initialize x
+  for (i in 1:n) {
+    if (u[i] < p1) {
+      x[i] <- rnorm(1, mean = 0, sd = 1)
+    } else {
+      x[i] <- rnorm(1, mean = 3, sd = 1)
+    }
+  }
+  # Plot histogram
+  hist(x, prob=TRUE, breaks=30, main=paste("Histogram for p1 =",
+ p1), xlab="x", col="lightblue", border="black")
+  # Overlay density plot
+  density_x <- density(x)
+  lines(density_x, col="red", lwd=2)
+}
+```
+
+## comment
+
+For \( p_1 = 0.25 \): The histogram shows a clear peak near 3, with limited presence of the \( N(0, 1) \) distribution. The overall distribution appears unimodal.
+For \( p_1 = 0.5 \): The mixture exhibits a more pronounced bimodal shape, with significant contributions from both \( N(0, 1) \) and \( N(3, 1) \).
+For \( p_1 = 0.75 \): The bimodality is still evident, though the peak at 0 becomes more pronounced while the peak at 3 remains, indicating a balanced contribution from both distributions.
+For \( p_1 = 0.95 \): The histogram primarily reflects the characteristics of the \( N(0, 1) \) distribution, resulting in a strong unimodal distribution centered around 0.
+we conclude  these observations, it appears that values of \( p_1 \) greater than approximately 0.5 tend to preserve the bimodal nature of the mixture, while lower values lead to unimodal distributions dominated by the component with the higher mixing probability. This suggests a threshold effect where \( p_1 \) values below 0.5 result in a loss of bimodality, aligning with the intuitive understanding of mixture distributions.
+
+
+## Ex3.20:Answer
+
+The aim is to simulate a compound Poisson process where the random variable \( Y \) follows a Gamma distribution. We will generate the process \( X(t) \) as a sum of random variables determined by a Poisson process \( N(t) \). In our simulation, we will set the parameters for the Poisson process and the Gamma distribution, generate samples, and compute the empirical mean and variance to validate our theoretical expectations.
+
+```{r}
+set.seed(2024)
+# Set parameters for the Poisson process and the Gamma distribution
+lambda <- 3 # Rate of the Poisson process
+shape <- 6 # Shape parameter for the Gamma distribution
+scale <- 2 # Scale parameter for the Gamma distribution
+size <- 1000 # Number of simulations
+eps <- 1e-3 # Small probability for Poisson process
+t <- 10 # Time for evaluation
+# Determine the number of Gamma distributed random variables needed with high probability
+n <- qpois(1 - eps, lambda = lambda * t)
+# Function to generate the number of arrivals in the Poisson process
+pp.exp <- function(t0) {
+  Tn <- rexp(1000, lambda)  # Generate interarrival times
+  Sn <- cumsum(Tn)          # Cumulative sum to get arrival times
+  return(min(which(Sn > t0)) - 1)  # Number of arrivals up to time t0
+}
+# Generate N(t) which follows the Poisson process
+ns <- sapply(1:size, function(i) pp.exp(t))
+# Generate X(t) as the sum of Gamma distributed random variables
+xs <- sapply(ns, function(n) {
+  if (n > 0) {
+    ys <- rgamma(n, shape = shape, scale = scale)  # Generate Gamma samples
+    sum(ys)  # Sum the samples
+  } else {
+    0  # If no arrivals, X(t) is 0
+  }
+})
+# Compare mean and variance of 'size' samples of X(t) for verification
+mean.s <- mean(xs)
+var.s <- var(xs)
+
+# Theoretical values
+mean.t <- lambda * t * shape * scale
+var.t <- (shape + 1) * shape * scale^2
+
+# Create a data frame to store results
+results <- data.frame(
+  Metric = c("Empirical Mean of X(10)", "Empirical Variance of X(10)",
+             "Theoretical Mean of X(10)", "Theoretical Variance of X(10)"),
+  Value = c(mean.s, var.s, mean.t, var.t)
+)
+# Print the results in table format
+print(results)
+
+```
+## comment 
+
+The empirical mean is very close to the theoretical mean , demonstrating that the simulation effectively captures the expected behavior of the process. However, the empirical variance is significantly higher than the theoretical variance . This discrepancy indicates that the simulation results exhibited much greater variability than predicted by the theory.
+
+
+
+## HW2
+
+## Exercises 5.4, 5.9, and 5.13 (pages 149-151, Statistical Computing with R)
+
+## Ex5.4:Answer
+```{r, fig.width=4, fig.height=4}
+set.seed(1234)
+# Number of samples for Monte Carlo estimation
+n = 100000; a = 3;b = 3
+# Plot the density to visualize the Beta(3, 3) distribution
+xs = rbeta(n, shape1 = a, shape2 = b)
+plot(density(xs), col = "blue", main = "Density of Beta(3, 3)", xlab = "x", ylab = "Density")
+
+```
+
+### Comment: 
+
+The plot provides a visual understanding of the Beta(3, 3) distribution, which is symmetric and bell-shaped, showing a higher likelihood for values near 0.5 and less likelihood for extreme values near 0 or 1. This density plot can help in understanding the behavior of the distribution when used in Monte Carlo simulations.
+
+
+```{r}
+library(knitr)
+set.seed(1234)
+# Function to compute Monte Carlo estimate of the Beta CDF
+mc.cdf.beta = function(p, shape1, shape2) {
+  if (p <= 0 || p >= 1) return(0)
+  us = runif(n)
+  return(mean(us <= p))  # Proportion of uniform samples less than or equal to p
+}
+xs = seq(0.1, 0.9, 0.1)
+estimates = sapply(xs, function(x) mc.cdf.beta(x, a, b))
+beta_values = sapply(xs, function(x) pbeta(x, a, b))
+results = round(rbind(estimates, beta_values), 3)
+rownames(results) = c("Monte Carlo Estimate", "Beta Function Values")
+#print(results)
+colnames(results) = paste0("", xs)
+# Create and print the table using kable
+kable(results, format = "markdown", caption = "Comparison of Monte Carlo Estimates 
+      and Beta Function Values for Beta(3,3)")
+```
+
+###  comment : 
+
+The Monte Carlo estimates match the exact Beta function values very closely, with only minor differences at some points due to random variation inherent in the Monte Carlo method. The Monte Carlo method, with a sufficiently large number of samples, is a reliable way to estimate the CDF of a Beta distribution. 
+
+
+## Ex5.9:Answer
+
+ We can generate Rayleigh-distributed random variables by transforming a uniform random variable \( U \sim U(0, 1) \). Generate Rayleigh-distributed samples :
+
+\[X = \sigma \sqrt{-2 \ln(U)}\]
+
+The antithetic counterpart of \( X \), denoted by \( X' \), is generated using the transformation 
+
+\(U' = 1 - U\)
+
+Then, the antithetic variable \( X' \) can be expressed as:
+
+\[X' = \sigma \sqrt{-2 \ln(1 - U)}\]
+
+```{r}
+# Function to generate Rayleigh samples (independent)
+Ray1 <- function(n, sigma) {
+  u <- runif(n)
+  return(sigma * sqrt(-2 * log(u)))
+}
+# Function to generate Rayleigh samples (antithetic)
+Ray2 <- function(n, sigma) {
+  u <- runif(n / 2)
+  x1 <- sigma * sqrt(-2 * log(u))
+  x2 <- sigma * sqrt(-2 * log(1 - u))
+  return(c(x1, x2))}
+m <- 10000
+sigma <- 2
+r1 <- replicate(10000, mean(Ray1(2, sigma)))  # For independent samples
+r2 <- replicate(10000, mean(Ray2(2, sigma)))  # For antithetic samples
+var_r1 <- var(r1)
+var_r2 <- var(r2)
+# Calculating percent reduction in variance
+percent_reduction <- 100 * (var_r1 - var_r2) / var_r1
+# Creating a table with the results
+result_table <- data.frame(
+  Method = c("Independent Samples", "Antithetic Samples"),
+  Variance = c(var_r1, var_r2),
+  `Percent Reduction` = c(NA, percent_reduction)
+)
+# Output the table
+kable(result_table, caption = "Variance Comparison of Independent and Antithetic Samples")
+```
+### Comment:
+
+ The percent reduction in variance quantifies the efficiency gain achieved by using antithetic variables. This high percentage indicates that the variance of the estimator is reduced by approximately 94.44% when using antithetic variables compared to using independent samples.
+
+
+
+## Ex5.13:Answer
+```{r}
+# Define the range for x
+x <- seq(1, 10, 0.01)
+# Calculate g(x)
+# Define the target function g(x)
+g <- function(x) { (x^2 / sqrt(2 * pi)) * exp(-x^2 / 2) }
+# Define importance function f1 (Normal distribution)
+f1 <- function(x) { 2 * dnorm(x, mean = 1) }
+# Define importance function f2 (Gamma distribution)
+f2 <- function(x) { dgamma(x - 1, shape = 3/2, scale = 2) }
+# Plot g(x)
+plot(x, g(x), type = "l", ylim = c(0, 1), col = "blue", lwd = 2,
+     xlab = "x", ylab = "Density", main = "Comparison of Distributions")
+# Add a normal distribution (f1) with mean = 1
+lines(x, 2 * dnorm(x, 1), lty = 2, col = "red")
+# Add a gamma distribution (f2) with shape = 3/2 and scale = 2
+lines(x, dgamma(x - 1, shape = 3/2, scale = 2), lty = 3, col = "black")
+# Add a legend
+legend("topright", inset = 0.02, legend = c("g(x)", "f1 (Normal)", "f2 (Gamma)"),
+       lty = 1:3, col = c("blue", "red", "black"))
+
+```
+
+```{r}
+# Define the range for x
+x <- seq(1, 10, 0.01)
+
+# Define the target function g(x)
+g <- function(x) { (x^2 / sqrt(2 * pi)) * exp(-x^2 / 2) }
+
+# Plot the ratio g(x) / f2 (Gamma distribution) in blue
+plot(x, g(x) / dgamma(x - 1, shape = 3/2, scale = 2), type = "l", lty = 3,
+     col = "blue", ylab = "Ratio g(x)/f(x)", xlab = "x", 
+     main = "Comparison of Ratios g(x)/f(x)")
+
+# Add the ratio g(x) / f1 (Normal distribution) in red
+lines(x, g(x)/ (2 * dnorm(x, 1)), lty = 2, col = "red")
+# Add a legend
+legend("topright", inset = 0.02, legend = c("f1 (Normal)", "f2 (Gamma)"),
+       lty = 2:3, col = c("red", "blue"))
+set.seed(1234)
+# Generate samples from the importance distributions
+samples_f1 <- rnorm(n, mean = 1, sd = 1)  # Normal samples
+samples_f2 <- rgamma(n, shape = 3/2, scale = 2) + 1  # Gamma samples
+# Remove samples outside the range (1, Inf)
+samples_f1 <- samples_f1[samples_f1 > 1]
+samples_f2 <- samples_f2[samples_f2 > 1]
+# Calculate g(x) values for the samples
+g_values_f1 <- g(samples_f1)
+g_values_f2 <- g(samples_f2)
+# Calculate the importance weights
+weights_f1 <- g_values_f1 / f1(samples_f1)
+weights_f2 <- g_values_f2 / f2(samples_f2)
+# Mean and variance of the weights for f1
+mean_f1 <- mean(weights_f1)
+var_f1 <- var(weights_f1)
+# Mean and variance of the weights for f2
+mean_f2 <- mean(weights_f2)
+var_f2 <- var(weights_f2)
+# Create a data frame to store results
+results <- data.frame(
+  Importance_Function = c("f1 (Normal)", "f2 (Gamma)"),
+  Mean_Estimate = c(mean_f1, mean_f2),
+  Variance_Estimate = c(var_f1, var_f2)
+)
+
+# Print the results as a table using kable
+kable(results, caption = "Mean and Variance Estimates for Importance Functions")
+```
+### Comment: 
+
+In conclusion, the choice of the importance function is paramount in achieving accurate and stable estimates in importance sampling. Although the Gamma distribution attempts to better fit the shape of \( g(x) \) in the tail, it results in a less stable estimation due to its higher variance. In contrast, the Normal distribution yields a more consistent estimate with a lower variance, making it the preferred choice for this particular integral estimation.
+
+
+## add_ex:Answer
+
+```{r}
+# Load required libraries
+library(ggplot2)
+library(knitr)
+
+# Define the range of n values for the Monte Carlo simulation
+n_values <- c(10^4, 2 * 10^4, 4 * 10^4, 6 * 10^4, 8 * 10^4)
+
+# Initialize a vector to store average computation times
+a_n <- numeric(length(n_values))
+# Monte Carlo simulation
+set.seed(123) # Set seed for reproducibility
+for (i in seq_along(n_values)) {
+  n <- n_values[i]
+  times <- numeric(100)  # To store computation times for 100 iterations
+  
+  for (j in 1:100) {
+    # Generate random permutations of numbers from 1 to n
+    random_numbers <- sample(1:n)
+    
+    # Measure the time taken to sort
+    start_time <- Sys.time()
+    sorted_numbers <- sort(random_numbers)
+    end_time <- Sys.time()
+    # Store elapsed time in seconds
+    times[j] <- as.numeric(difftime(end_time, start_time, units = "secs"))
+  }
+  
+  # Calculate the average computation time
+  a_n[i] <- mean(times)
+}
+
+# Calculate t_n = n * log(n)
+t_n <- n_values * log(n_values)
+
+# Create a data frame for regression analysis
+results <- data.frame(t_n = t_n, a_n = a_n)
+
+# Perform linear regression
+model <- lm(a_n ~ t_n, data = results)
+
+# Print the summary of the regression model
+model_summary <- summary(model)
+
+# Extract relevant information from the summary for tabular output
+coefficients_table <- data.frame(
+  Estimate = model_summary$coefficients[, "Estimate"],
+  Std_Error = model_summary$coefficients[, "Std. Error"],
+  t_value = model_summary$coefficients[, "t value"],
+  p_value = model_summary$coefficients[, "Pr(>|t|)"]
+)
+
+# Display the regression coefficients table
+kable(
+  coefficients_table,
+  digits = 5,
+  caption = "Summary of Regression Model Coefficients"
+)
+
+# Create the plot
+ggplot(results, aes(x = t_n, y = a_n)) +
+  geom_point() +  # Scatter plot of a_n vs t_n
+  geom_smooth(method = "lm", color = "red", se = FALSE) +  # Regression line
+  labs(
+    title = "Scatter Plot of Average Computation Time vs t_n",
+    x = expression(t[n] == n * log(n)),
+    y = "Average Computation Time (seconds)"
+  ) +
+  theme_minimal()
+
+  
+```
+ 
+ 
+## comment: 
+ 
+The results indicate that as $t_n$  increases (which corresponds to the size of the dataset and the logarithmic component), the average computation time $a_n$   also tends to increase, suggesting a positive correlation between the logarithmic scaling of the input size and the time taken for computations.
+ 
+ 
+
+
+## HW3
+
+##Exercises 6.6 and 6.B (page 180-181, Statistical Computing  with R)
+
+
+## Ex6.6:Answer
+```{r}
+ n <- 1000  # Number of iterations
+xbar <- numeric(n)  
+m3 <- numeric(n)  
+m2 <- numeric(n)  
+sk <- numeric(n)  
+m <- 1000  
+set.seed(2024)  
+for (i in 1:n) {
+  x <- rnorm(m, mean = 0, sd = sqrt(6/n)) 
+  xbar[i] <- mean(x)  
+  m3[i] <- mean((x - xbar[i])^3)
+  m2[i] <- mean((x - xbar[i])^2)
+  sk[i] <- m3[i] / ((m2[i])^(3/2))}
+  u <- sk[order(sk)]  
+#Generate quantiles through empirical distribution
+  q <- c(0.025,0.05,0.95,0.975)
+  gq <- qlsa<- f <- SE <- numeric(4)
+  #gq= represents the estimated value corresponding to 0.025,0.05 ,0.95,0.975 quantile of the skewness
+  #qlsa=quantiles of the large sample approx. sqrt(b1) = N (0, 6/n).
+  #SE=the standard error of the estimates from (2.14) using the normal approximation for the density.
+  for (j in 1:4) {
+    gq[j] <- u[n*q[j]]
+   qlsa[j] <- qnorm(q[j],mean = 0,sd = sqrt(6/n))
+    f[j] <- (1/sqrt(2*pi*(6/n)))*exp(-gq[j]^2/(2*(6/n)))
+    SE[j] <- sqrt(q[j]*(1-q[j])/(n*f[j]^2))
+    #SE=sqrt(q*(1-q)/(n*f(xq)^2))
+  }
+  comparison <- data.frame(q,gq,qlsa,SE)
+  knitr::kable(comparison)
+  
+```
+
+## comment
+
+The estimated quantiles of the skewness ($gq$) are close to the quantiles of the large-sample approximation ($qlsa$), indicating that the Monte Carlo simulation provides results consistent with the normal approximation. The standard error (SE) of the estimated quantiles is quite small, suggesting that the estimates are reliable and the variation in the quantile estimates is minimal.
+
+## Ex6.B:Answer
+
+```{r}
+#### 6_B ####
+Test <- function(seed){
+  set.seed(12345)
+  x <- rnorm(30, 2, 10)
+  sigma <- rnorm(30, 5, 50)
+  y <- 2.5 * x + sigma
+  cor(x, y)
+  pearson <- cor.test(x, y)
+  kendall <- cor.test(x, y, method = 'kendall')
+  spearman <- cor.test(x, y, method = 'spearman')
+  return(list(pearson = pearson, kendall = kendall, spearman = spearman, data = data.frame(x, y)))
+}
+results <- Test()
+# Pearson correlation results
+pearson_res <- data.frame(
+  Statistic = results$pearson$statistic,
+  p_value = results$pearson$p.value,
+  Estimate = results$pearson$estimate,
+Conf_Interval = paste0("[",round(results$pearson$conf.int[1], 2),
+                       ", ", round(results$pearson$conf.int[2], 2), "]"))
+knitr::kable(pearson_res, caption = "Pearson Correlation Results")
+# Kendall correlation results
+kendall_res <- data.frame(
+  Statistic = results$kendall$statistic,
+  p_value = results$kendall$p.value,
+  Estimate = results$kendall$estimate)
+knitr::kable(kendall_res, caption = "Kendall Correlation Results")
+# Spearman correlation results
+spearman_res <- data.frame(
+  Statistic = results$spearman$statistic,
+  p_value = results$spearman$p.value,
+  Estimate = results$spearman$estimate
+)
+knitr::kable(spearman_res, caption = "Spearman Correlation Results")
+
+```
+
+## comment 
+
+All three tests confirm a significant positive relationship between x and y. The Pearson correlation test indicates a stronger linear relationship, while the Kendall and Spearman tests show significant but slightly weaker monotonic associations. This suggests that, while the relationship between x and y is largely linear, there may be some non-linear components captured by the rank-based tests.
+
+
+## Add_ex:Answer
+
+```{r}
+# Powers of the two methods
+p1 <- 0.651
+p2 <- 0.676
+# Sample sizes for both methods
+n1 <- 10000
+n2 <- 10000
+# Pooled proportion
+p_pool <- (p1 * n1 + p2 * n2) / (n1 + n2)
+# Z-statistic
+z_stat <- (p1 - p2) / sqrt(p_pool * (1 - p_pool) * (1/n1 + 1/n2))
+# P-value for two-tailed test
+p_value <- 2 * (1 - pnorm(abs(z_stat)))
+# Output the results
+cat("Z-statistic:", z_stat, "\n")
+## Z-statistic: -3.741209
+cat("P-value:", p_value, "\n")
+# Compare with alpha = 0.05 to make a decision
+if (p_value < 0.05) {
+cat("Reject the null hypothesis: The powers are significantly different.\n")
+} else {
+cat("Fail to reject the null hypothesis: The powers are not significantly different.\n")
+}
+## Reject the null hypothesis: The powers are significantly different
+```
+## comment 
+
+Thus, it can be concluded that the performance of the two methods, in terms of power, is not equivalent, and Method 2 demonstrates a statistically significant advantage over Method 1.
+ 
+## HW4
+
+## Exercises 7.4-7.5 (pages 212, Statistical Computating with R)
+
+## add_ex:answer
+
+```{r}
+ set.seed(123)  # For reproducibility
+N <- 1000
+H_0 <- 950
+H_1<- 50
+alpha <- 0.1
+m <- 10000
+fwr_bonferroni <- function() {
+  p_vals <- c(runif(H_0), rbeta(H_1, 0.1, 1))
+  adjusted_p_vals <- p.adjust(p_vals, method = "bonferroni")
+  mean(adjusted_p_vals < alpha)
+}
+
+fdr_bh <- function() {
+  p_vals <- c(runif(H_0), rbeta(H_1, 0.1, 1))
+  adjusted_p_vals <- p.adjust(p_vals, method = "BH")
+  mean(adjusted_p_vals < alpha)
+}
+
+result <- replicate(m, {
+  fwer_bonferroni <- fwr_bonferroni()
+  fdr_bh_value <- fdr_bh()
+  
+  c(fwer_bonferroni, fdr_bh_value)
+})
+
+mean_fwer <- colMeans(result)
+mean_fdr <- apply(result, 2, function(x) mean(x < alpha))
+tpr <- rowMeans(result)
+
+output <- matrix(c(mean_fwer[1], mean_fdr[1], tpr[1], mean_fwer[2], mean_fdr[2], tpr[2]), 
+nrow = 3, byrow = FALSE)
+colnames(output) <- c("Bonferroni correction", "B-H correction")
+rownames(output) <- c("FWER", "FDR", "TPR")
+
+print(output)
+
+## Reject the null hypothesis: The powers are significantly different
+```
+
+
+
+## comment 
+
+Both the Bonferroni and Benjamini-Hochberg (B-H) corrections effectively control the Family-Wise Error Rate (FWER) below the nominal level of 0.1, with Bonferroni at approximately 0.022 and B-H at 0.0195. However, both methods yield a False Discovery Rate (FDR) of 1, indicating that all significant results corresponded to null hypotheses, which limits the identification of true positives. The True Positive Rate (TPR) is also low, with Bonferroni around 0.01995 and B-H at 0.0311, suggesting challenges in detecting true effects amidst numerous null hypotheses. This highlights the need for more powerful testing methods or alternative approaches when dealing with a high proportion of nulls.
+ 
+
+
+## Ex7.4:Answer
+
+```{r}
+library(boot)
+# Perform bootstrapping
+set.seed(12345)  # For reproducibility
+hours = c(3, 5, 7, 18, 43, 85, 91, 98, 100, 130, 230, 487)
+n = length(hours)
+R = 10000
+# Maximum likelihood Estimates (MLE) yields:
+mle.lambda = function (hours, indices) {
+   sample_hours <- hours[indices]
+  return(length(sample_hours)/sum(sample_hours))
+}
+boot(data=hours, statistic =mle.lambda, R =R)
+```
+## comment 
+
+The maximum likelihood estimate (MLE) from the original data is approximately 0.00925212. The bias, measured at 0.001295419, reflects a small upward difference between bootstrap estimates and the original estimate. Additionally, the standard error of 0.004235797 indicates the variability of the bootstrap estimates, highlighting their dispersion.
+
+## Ex7.5:Answer
+
+```{r}
+# Load necessary library
+#library(boot)
+# Data preparation
+hours <- c(3, 5, 7, 18, 43, 85, 91, 98, 100, 130, 230, 487)
+# Function to calculate the mean from bootstrap samples
+meant <- function(data, indices) {
+  sample_hours <- data[indices]
+  return(mean(sample_hours))}
+b <- boot(data = hours, statistic = meant, R = 10000)
+# Display results
+print(b)
+ci <- boot.ci(b, type = c("norm", "perc", "basic", "bca"))
+# Print confidence intervals
+ci_results <- data.frame(
+Type = c("Normal", "Percentile", "Basic", "BCa"),
+Lower = c(ci$norm[2], ci$perc[4], ci$basic[4], ci$bca[4]),
+Upper = c(ci$norm[3], ci$perc[5], ci$basic[5], ci$bca[5]))
+# Print confidence interval table
+print(ci_results)
+```
+
+## Comment: 
+
+The replicates are not approximately normal, so the normal and percentile
+intervals differ. From the histogram of replicates, it appears that the distribution
+of the replicates is skewed - although we are estimating a mean, the sample size
+is too small for CLT to give a good approximation here. The BCa interval is a
+percentile type interval, but it adjusts for both skewness and bias
+```{r}
+hist(b$t, prob = TRUE, main = "",col="blue")
+points(b$t0, 0, cex = 2, pch = 16)
+```
+
+## HW5
+
+## Exercises 7.8, 7.10, 8.1 and 8.2 (pages 213 and 243, Statistical  Computing with R)
+
+
+## Ex7.8:Answer
+```{r}
+# Load necessary library
+library(knitr); library(bootstrap); attach(scor); x <- as.matrix(scor); n <- nrow(x)
+theta.jack <- numeric(n) #  jackknife estimates
+lambda <- eigen(cov(x))$values # Compute the eigenvalues of the covariance matrix
+theta.hat <- max(lambda / sum(lambda)) # hat estimate of theta
+# Jackknife 
+for (i in 1:n) {
+  y <- x[-i, ]
+  s <- cov(y)
+lambda <- eigen(s)$values
+theta.jack[i] <- max(lambda / sum(lambda))}
+bias.jack <- (n - 1) * (mean(theta.jack) - theta.hat)
+se.jack <- sqrt((n - 1) / n * sum((theta.jack - mean(theta.jack))^2))
+results <- round(c(theta.hat, bias.jack, se.jack), 5)
+# Create a data frame for better formatting
+results_table <- data.frame(
+Statistic = c("theta.hat", "bias.jack", "se.jack"),Value = results)
+# Display the table using kable
+kable(results_table, col.names = c("Statistic", "Value"), caption = "Jackknife Results")
+```
+### Comment: 
+
+The jackknife estimate of bias of $\hat{\theta}$ is approximately 0.001 and the jackknife estimate of SE is approximately 0.05. These estimates are not more  different from the
+bootstrap estimates.
+
+## Ex7.10:Answer
+```{r}
+library(DAAG)
+data(ironslag)
+head(ironslag[2,])
+b <- seq(5, 45, 0.1) # Range of predictioon  lines 
+#par(mfrow = c(2, 2)) # fit four models and plot 
+attach(ironslag)
+# Linear model
+J1 <- lm(magnetic ~ chemical) 
+plot(chemical, magnetic, main = "Linear", pch = 16)
+yhat1 <- J1$coef[1] + J1$coef[2] * b
+lines(b, yhat1, lwd = 2,col="red")
+# Quadratic model
+J2 <- lm(magnetic ~ chemical + I(chemical^2))
+plot(chemical, magnetic, main = "Quadratic", pch = 16)
+yhat2 <- J2$coef[1] + J2$coef[2] * b + J2$coef[3] * b^2
+lines(b, yhat2, lwd = 2,col="red")
+# Exponential (log-linear) model
+J3 <- lm(log(magnetic) ~ chemical)
+plot(chemical, magnetic, main = "Exponential", pch = 16)
+logyhat3 <- J3$coef[1] + J3$coef[2] * b
+yhat3 <- exp(logyhat3)
+lines(b, yhat3, lwd = 2,col="red")
+# Cubic polynomial model
+J4 <- lm(magnetic ~ chemical + I(chemical^2) + I(chemical^3))
+plot(chemical, magnetic, main = "Cubic", pch = 16)
+yhat4 <- J4$coef[1] +J4$coef[2] * b + J4$coef[3] * b^2 + J4$coef[4] * b^3
+lines(b, yhat4, lwd = 2,col="red")
+# Compute adjusted R-squared values for each model
+Rsq <- numeric(4)
+Rsq[1] <- summary(J1)$adj.r.squared
+Rsq[2] <- summary(J2)$adj.r.squared
+Rsq[3] <- summary(J3)$adj.r.squared
+Rsq[4] <- summary(J4)$adj.r.squared
+Rsq_rounded <- round(Rsq, 4)
+models <- c("Linear", "Quadratic", "Exponential", "Cubic")
+Rsq_table <- data.frame(Model = models, Adjusted_R_Squared = Rsq_rounded)
+# Leave-one-out cross-validation
+n <- nrow(ironslag)
+e1 <- e2 <- e3 <- e4 <- numeric(n)
+for (k in 1:n) {
+  # Leave out observation k
+  y <- magnetic[-k];  x <- chemical[-k]
+  # Linear model
+  J1 <- lm(y ~ x)
+  yhat1 <- J1$coef[1] + J1$coef[2] * chemical[k]
+  e1[k] <- magnetic[k] - yhat1
+  # Quadratic model
+  J2 <- lm(y ~ x + I(x^2))
+  yhat2 <- J2$coef[1] + J2$coef[2] * chemical[k] + J2$coef[3] * chemical[k]^2
+  e2[k] <- ironslag$magnetic[k] - yhat2
+  # Exponential (log-linear) model
+  J3 <- lm(log(y) ~ x)
+  logyhat3 <- J3$coef[1] + J3$coef[2] * chemical[k]
+  yhat3 <- exp(logyhat3);  e3[k] <- magnetic[k] - yhat3
+  # Cubic model
+  c2 <- x^2;  c3 <- x^3
+  J4 <- lm(y ~ x + c2 + c3)
+  yhat4 <- J4$coef[1] + J4$coef[2] * chemical[k] + J4$coef[3] * chemical[k]^2 +
+    J4$coef[4] * chemical[k]^3
+  e4[k] <- magnetic[k] - yhat4
+}
+mse <- c(mean(e1^2), mean(e2^2), mean(e3^2), mean(e4^2))
+mse_results <- data.frame(
+  Model = c("Linear", "Quadratic", "Exponential", "Cubic"),
+  MSE = mse)
+mse_results <- data.frame(Model = models, MSE = mse)
+combined_results <- merge(Rsq_table, mse_results, by = "Model")
+kable(combined_results, caption = "Adjusted R-Squared and MSE for Different Models")
+min_mse_model <- combined_results$Model[which.min(combined_results$MSE)]
+max_rsq_model <- combined_results$Model[which.max(combined_results$Adjusted_R_Squared)]
+# Print the results
+cat("Model with minimum MSE:", min_mse_model, "\n")
+cat("Model with maximum adjusted R-squared:", max_rsq_model, "\n")
+```
+## Comment : 
+
+The quadratic model indeed fits the data better than the other models, as indicated by its highest adjusted \( R^2 \) value of 0.5768 and the lowest Mean Squared Error (MSE) (17.85248). This suggests that the relationship between magnetic and chemical includes a slight curvature, which the quadratic term captures effectively.
+
+
+## Ex8.1:Answer
+
+Cramer-von Mises statistic 
+
+\[W^2 = \frac{mn}{(m+n)^2} \left[ \sum_{i=1}^{n} (F_n(x_i) - G_m(x_i))^2 + \sum_{j=1}^{m} (F_n(y_j) - G_m(y_j))^2 \right]\]
+
+```{r}
+cvm.test <- function(x, y, R = 1000) {
+  n <- length(x); m <- length(y);  z <- c(x, y);
+  N <- n + m;  Fn <- numeric(N);  Gm <- numeric(N)
+  # Calculate Fn and Gm for the observed data
+  for (i in 1:N) {
+    Fn[i] <- mean(as.integer(z[i] <= x))
+    Gm[i] <- mean(as.integer(z[i] <= y))
+  }
+  # Compute the CvM test statistic for observed data
+  cvm0 <- ((n * m) / (n+m)^2) * sum((Fn - Gm)^2)
+  # Perform permutations to generate null distribution
+  cvm <- replicate(R, expr = {
+    k <- sample(1:N)
+    Z <- z[k]
+    X <- Z[1:n]
+    Y <- Z[(n + 1):N]
+    for (i in 1:N) {
+      Fn[i] <- mean(as.integer(Z[i] <= X))
+      Gm[i] <- mean(as.integer(Z[i] <= Y))
+    }
+    ((n * m) / (n+m)^2) * sum((Fn - Gm)^2)
+  })
+  # Combine observed and permuted statistics
+  cvm1 <- c(cvm, cvm0)
+  # Return the observed test statistic and p-value
+  return(list(statistic = cvm0, p.value = mean(cvm1 >= cvm0)))
+}
+## Data: Example 8.1
+attach(chickwts)
+x1 <- sort(as.vector(weight[feed == "soybean"]))
+y1 <- sort(as.vector(weight[feed == "linseed"]))
+# Perform CvM test for soybean vs linseed
+result1 <- cvm.test(x1, y1)
+print(result1)
+
+## Data: Example 8.2
+x2 <- sort(as.vector(weight[feed == "sunflower"]))
+y2 <- sort(as.vector(weight[feed == "linseed"]))
+# Perform CvM test for sunflower vs linseed
+result2 <- cvm.test(x2, y2)
+print(result2)
+```
+## Data: Example 8.1
+
+The p-value for the CvM test comparing soybean and linseed supplements is
+not significant. There is not evidence of a difference between these distributions.
+
+## Data: Example 8.2
+
+The p-value for the CvM test comparing sunflower and linseed supplements is
+significant at $\alpha$= 0.01, so there is strong evidence that the distributions of weights
+for these two groups are different.
+
+## Ex8.2:Answer
+
+
+```{r}
+library(MASS)
+set.seed(123)
+mu <- c(0, 0)  # Mean vector
+Sigma <- matrix(c(1, 0.5, 0.5, 1), 2, 2)  # Covariance matrix
+n <- 30  # Sample size
+R <- 600 # Number of permutations
+# Generate bivariate normal data
+x <- mvrnorm(n, mu, Sigma)
+# Permutation function
+perm <- function(x, y, R = 600) {
+  spea_test <- cor.test(x, y, method = "spearman")
+  n <- length(x)
+  Rs <- replicate(R, {
+    k <- sample(1:n)
+    cor.test(x, y[k], method = "spearman")$estimate
+  })
+  Rs1 <- c(spea_test$estimate, Rs)
+  p_val <- mean(as.integer(spea_test$estimate <= Rs1))
+  return(list(rho.s = spea_test$estimate, p.value = p_val))
+}
+# Store results in a list
+results <- list()
+# Conduct Spearman correlation test
+spearman_test_1 <- cor.test(x[, 1], x[, 2], method = "spearman")
+perm_test_1 <- perm(x[, 1], x[, 2])
+results[[1]] <- c("Normal Data", spearman_test_1$estimate, 
+                 spearman_test_1$p.value, perm_test_1$p.value)
+# Generate exponential data from bivariate normal
+x_exp1 <- exp(mvrnorm(n, mu, Sigma))
+spearman_test_2 <- cor.test(x_exp1[, 1], x_exp1[, 2], method = "spearman")
+perm_test_2 <- perm(x_exp1[, 1], x_exp1[, 2])
+results[[2]] <- c("Exponential Data 1", spearman_test_2$estimate, 
+                  spearman_test_2$p.value, perm_test_2$p.value)
+# Create a summary table
+results_df <- do.call(rbind, results)
+colnames(results_df) <- c("Data Type", "Spearman Correlation", 
+                          "Spearman p-value", "Permutation p-value")
+# Convert results to a data frame for kable
+results_df <- as.data.frame(results_df, stringsAsFactors = FALSE)
+# Print the results table using kable
+kable(results_df, format = "markdown", digits = 3, caption = 
+        "Spearman Correlation and Permutation Test Results")
+
+```
+
+## Comment:
+
+The results of the Spearman correlation and the permutation tests indicate significant relationships between the variables analyzed. As shown in Table 3, both the Spearman p-values and the permutation p-values are significant.
+
+
+## HW6
+
+## Exercies 9.3 and 9.8 (pages 277-278, Statistical Computing with R)
+
+## Ex9.3:Answer
+
+
+Discard the first 1000 of the chain, and compare the deciles of the generated observations with the deciles of the standard Cauchy distribution.
+The following chain uses the \( N (\mu_t, \sigma^2) \) proposal distribution, where \( \mu_t = X_t \) is the previous value in the chain. Then
+
+\[
+r(x_t, y) = \frac{f(y) g(x_t \mid y)}{f(x_t) g(y \mid x_t)} = \frac{\left(1 + x_t^2\right) \pi}{\left(1 + y^2\right) \pi} \frac{\sqrt{2 \pi \sigma} \, e^{-(x_t - y)^2 / (2 \sigma^2)}}{\sqrt{2 \pi \sigma} \, e^{-(y - x_t)^2 / (2 \sigma^2)}} = \frac{1 + x_t^2}{1 + y^2}
+\]
+
+```{r}
+library(coda)
+
+# Parameters
+m <- 20000
+sigma <- 3;burn <- 1000;chains <- 3;p <- seq(0.1, 0.9, 0.1)
+# Function for one chain of Metropolis-Hastings
+run_chain <- function(m, sigma) {
+  x <- numeric(m)
+  x[1] <- rnorm(1, 0, sigma)
+  u <- runif(m)
+  k <- 0
+  
+  for (i in 2:m) {
+    xt <- x[i - 1]
+    y <- rnorm(1, xt, sigma)
+    num <- 1 + xt^2
+    den <- 1 + y^2
+    num <- num * dnorm(xt, y)
+    den <- den * dnorm(y, xt)
+    
+    if (u[i] <= num / den) {
+      x[i] <- y
+    } else {
+      x[i] <- xt
+      k <- k + 1
+    }
+  }
+  list(x = x, rejected = k)
+}
+run_chain(m, sigma)$rejected
+# Run three independent chains
+results <- lapply(1:chains, function(i) run_chain(m, sigma))
+chains_data <- mcmc.list(lapply(results, function(res) mcmc(res$x[(burn + 1):m])))
+# Convergence diagnostics using Gelman-Rubin
+gelman_diag <- gelman.diag(chains_data)
+print(gelman_diag)
+#Convergence achieved: Gelman-Rubin R-hat < 1.2 for all parameters
+# Quantiles comparison
+xb <- unlist(lapply(results, function(res) res$x[(burn + 1):m]))
+Q <- quantile(xb, p);true_quantiles <- qcauchy(p)
+round(rbind(Q, true_quantiles), 3)
+# Compute upper tail quantiles
+p <- seq(0.95, 1, 0.01);Q <- quantile(xb, p) ;cauchy <- qcauchy(p) 
+# Round and display upper tail quantiles
+print(round(rbind(Q, cauchy), 3))
+# Plot Q-Q plot to compare with Cauchy distribution
+p <- ppoints(200)
+Q <- quantile(xb, p)
+z <- qcauchy(p)
+qqplot(z, Q, cex = 0.5, main = "Q-Q Plot of Sample vs. Cauchy Distribution")
+abline(0, 1)
+
+
+```
+
+## Comment : 
+
+We also computed the upper tail quantiles. The deciles of the generated chain
+are roughly in agreement with the deciles of standard Cauchy. In the upper tail
+the difference between sample and Cauchy quantiles is even greater.
+Gelman-Rubin \(\hat{R} < 1.2\) for all parameters This threshold suggests that the chains are mixing well and that your model has likely converged to the target distribution.
+
+## Ex9.8: Answer
+```{r}
+library(coda)
+# Parameters
+N <- 20000 ; burn <- 2000;a <- 3;b <- 4;n <- 15;chains <- 3 
+run_chain <- function(N, a, b, n) {
+  x <- y <- numeric(N)
+  x[1] <- rbinom(1, size = n, prob = 0.5)
+  y[1] <- rbeta(1, x[1] + a, n - x[1] + b)
+  
+  for (i in 2:N) {
+    x[i] <- rbinom(1, size = n, prob = y[i - 1])
+    y[i] <- rbeta(1, x[i] + a, n - x[i] + b)
+  }
+  return(x)
+}
+results <- lapply(1:chains, function(i) run_chain(N, a, b, n))
+chains_data <- mcmc.list(lapply(results, mcmc))
+# Convergence diagnostics using Gelman-Rubin
+gelman_diag <- gelman.diag(chains_data)
+print(gelman_diag)
+# Frequency table for the marginal distribution estimate
+xb <- unlist(results)
+f1 <- table(xb) / length(xb)
+i <- 0:n
+fx <- choose(n, i) * beta(i + a, n - i + b) / beta(a, b)
+print(round(rbind(f1, fx), 3))
+# Plot comparison between estimated and theoretical distribution
+barplot(fx, space = 0, ylim = c(0, 0.15), xlab = "n",
+        main = "Theoretical (lightblue) vs Estimated (red) Marginal Distribution", col = "lightblue")
+points(0:n + 0.5, f1, pch = 16, col = "red")
+# Add legend
+#legend("botright", legend = c("Theoretical (bars)", "Estimated (points)"),
+      # fill = c("lightblue", NA), pch = c(NA, 16), col = c("lightblue", "red"))
+
+
+```
+
+
+## add_ex9.3 and 9.8:Answer
+
+## Algorithm (Continuous Situation) proof
+
+
+ Our goal is to prove that the target distribution \( f(x) \) is stationary under the transition kernel \( K(s, r) \), which means to verify the detailed balance condition:
+
+\[
+K(s, r) f(s) = K(r, s) f(r),
+\]
+
+where:  \( f(x) \) is the target probability density function (pdf). \( g(r | s) \) is the proposal distribution pdf, representing the probability of proposing a move from state \( s \) to state \( r \). \( \alpha(s, r) \) is the acceptance probability, defined as:
+  
+  \[
+  \alpha(s, r) = \min \left( 1, \frac{f(r) g(s | r)}{f(s) g(r | s)} \right).
+  \]
+
+ If we can show that
+
+\[
+K(s, r) f(s) = K(r, s) f(r),
+\]
+
+then \( f(x) \) is a stationary distribution of the Markov chain with transition kernel \( K(s, r) \). The transition kernel \( K(s, r) \) defines the probability of transitioning from state \( s \) to state \( r \) and is specified as follows:
+
+\[
+K(s, r) = 
+\begin{cases}
+\alpha(s, r) g(r | s) & \text{if } s \neq r, \\
+1 - \int \alpha(s, r) g(r | s) \, dr & \text{if } s = r.
+\end{cases}
+\]
+
+The transition   kernel  mixture of two cases:
+
+1. This happens with probability \( \alpha(s, r) g(r | s) \).
+
+2. This happens with the probability needed to ensure that the total transition probability from \( s \) to any state (including \( s \) itself) sums to 1.
+
+
+
+
+Consider the case when \( s \neq r \). In this case, the kernel is:
+
+\[
+K(s, r) = \alpha(s, r) g(r | s),
+\]
+
+and therefore,
+
+\[
+K(s, r) f(s) = \alpha(s, r) g(r | s) f(s).
+\]
+
+Since \( \alpha(s, r) \) is defined as:
+
+\[
+\alpha(s, r) = \min \left( 1, \frac{f(r) g(s | r)}{f(s) g(r | s)} \right),
+\]
+
+we can split this into two sub-cases based on the value of the ratio \( \frac{f(r) g(s | r)}{f(s) g(r | s)} \):
+
+#### case 1: If \( \frac{f(r) g(s | r)}{f(s) g(r | s)} \leq 1 \)
+In this sub-case, \( \alpha(s, r) = \frac{f(r) g(s | r)}{f(s) g(r | s)} \), and we have:
+
+\[
+K(s, r) f(s) = \alpha(s, r) g(r | s) f(s) = \frac{f(r) g(s | r)}{f(s) g(r | s)} g(r | s) f(s) = f(r) g(s | r).
+\]
+
+Similarly, for the reverse transition \( K(r, s) \), we have:
+
+\[
+K(r, s) f(r) = \alpha(r, s) g(s | r) f(r).
+\]
+
+Here, since \( \frac{f(s) g(r | s)}{f(r) g(s | r)} = 1 \) (i.e., \( \alpha(r, s) = 1 \)), it follows that:
+
+\[
+K(r, s) f(r) = g(s | r) f(r).
+\]
+
+Since \( f(r) g(s | r) = f(s) g(r | s) \), this satisfies the detailed balance condition:
+
+\[
+K(s, r) f(s) = K(r, s) f(r).
+\]
+
+#### case 2: If \( \frac{f(r) g(s | r)}{f(s) g(r | s)} > 1 \)
+In this sub-case, \( \alpha(s, r) = 1 \), and we have:
+
+\[
+K(s, r) f(s) = \alpha(s, r) g(r | s) f(s) = g(r | s) f(s).
+\]
+
+For the reverse transition, \( K(r, s) f(r) \), we have:
+
+\[
+\alpha(r, s) = \frac{f(s) g(r | s)}{f(r) g(s | r)},
+\]
+
+so:
+
+\[
+K(r, s) f(r) = \alpha(r, s) g(s | r) f(r) = \frac{f(s) g(r | s)}{f(r) g(s | r)} g(s | r) f(r) = f(s) g(r | s).
+\]
+
+Thus, we have again shown that
+
+\[
+K(s, r) f(s) = K(r, s) f(r).
+\]
+
+Since both cases satisfy the detailed balance condition, we conclude that \( f(x) \) is indeed a stationary distribution for the Markov chain with transition kernel \( K(s, r) \).
+
+
+## HW7(Exercises 11.3 and 11.5 (pages 353-354, Statistical Computing with R))
+
+## Exercises 11.3: Answer
+
+To  evaluating the infinite sum:
+\[S(a) = \sum_{k=0}^{\infty} \frac{(-1)^k}{k! 2^k } \frac{\|a\|^{2k+2}}{(2k+1)(2k+2)}  \frac{\Gamma\left( \frac{d+1}{2} \right) \Gamma\left( k+\frac{3}{2} \right)}{\Gamma\left( k+\frac{d}{2} + 1 \right)}\]
+\[\|a\|^2 = a_1^2 + a_2^2 + \cdots + a_d^2\]
+where:
+
+\(\| a \|\) is the Euclidean norm of the vector \(a \in \mathbb{R}^d\), defined as 
+\(
+\| a \| = \sqrt{\sum_{i=1}^d a_i^2}.
+\)
+
+\(d\) is an integer dimension (e.g., the number of elements in \(a\)).
+It can be shown that the sum converges to \( \mathbb{E}\|a - Z\| - \mathbb{E}\|Z\| \), where \( Z \sim \mathcal{N}_d(0, I_d) \). For large \( \|a\| \), this sum is difficult to evaluate, but \( \mathbb{E}\|a - Z\| \sim \|a\| \) if \( \|a\| \) is very large. $S(a) \sim \mathbb{E} \|a - Z\| - \mathbb{E} \|Z\| \sim \|a\|$.
+
+Write the \( k \)-th term of the sum as
+
+where
+\[
+a_k = \|a\|^{2(k+1)}, \quad c_k = \frac{1}{k! 2^k (2k + 1)(2k + 2)} \frac{\Gamma\left( \frac{d+1}{2} \right) \Gamma\left( k + \frac{3}{2} \right)}{\Gamma\left( k + \frac{d}{2} + 1 \right)}.
+\]
+\[
+(-1)^k a_k c_k,
+\]
+
+
+```{r}
+#Then use logarithms to avoid overflow
+sk <- function(a, k) {
+  if (k < 0)  # No negative terms in the sum.
+    return(0)
+  d <- length(a) # Length of vector a (dimension d)
+  aa <- sum(a * a)  # Square of the Euclidean norm of a
+  
+  # Logarithmic computation for stability
+  log.ak <- (k + 1) * log(aa)
+  log.ck <- lgamma((d + 1) / 2) + lgamma(k + 1.5) - lgamma(k + 1) - 
+            k * log(2) - log((2 * k + 1) * (2 * k + 2)) - lgamma(k + d / 2 + 1)
+  y <- exp(log.ak + log.ck)
+  if (k %% 2 == 1)
+    y <- -y  # Apply (-1)^k for alternating terms
+  return(sqrt(2 / pi) * y)  # Multiply by sqrt(2 / pi) for final term
+}
+#Computing the Sum up to a Specified Number of Terms
+
+da <- function(a, K = 1000) {
+  if (K < 0)
+    return(0)
+  k <- 0:K
+  d <- length(a)
+  aa <- sum(a * a)  # Square of the Euclidean norm of a
+  
+  # Logarithmic computation for each term in the sequence
+  log.ak <- (k + 1) * log(aa)
+  log.ck <- lgamma((d + 1) / 2) + lgamma(k + 1.5) - lgamma(k + 1) - 
+            k * log(2) - log((2 * k + 1) * (2 * k + 2)) - lgamma(k + d / 2 + 1)
+  y <- exp(log.ak + log.ck)
+  
+  # Alternating sign pattern for terms (-1)^k
+  i <- rep(c(1, -1), length = K + 1)
+  z <- sqrt(2 / pi) * sum(i * y)
+  
+  # Return the minimum of the computed sum and the Euclidean norm as a final result
+  return(min(c(z, sqrt(aa))))
+}
+a <- c(1, 2)
+result <- da(a)
+print(result)
+
+```
+
+
+## Ex11.5: Answer
+
+Exercise 11.4: Find the intersection points \( A(k) \) in \( (0, \sqrt{k}) \) of the curves
+\[
+S_{k-1}(a) = P\left( t(k-1) > \sqrt{\frac{a^2(k-1)}{k - a^2}} \right)
+;
+S_k(a) = P\left( t(k) > \sqrt{\frac{a^2 k}{k + 1 - a^2}} \right),
+\]
+Where \( t(k-1) \) and \( t(k) \) represent the random variables (likely t-distributions with \( k-1 \) and \( k \) degrees of freedom, respectively), \( a \) is the variable, and \( k \) is the dimension or parameter.
+for k = 4 : 25, 100, 500, 1000, where t(k) is a Student t random variable with k degrees of freedom.
+First, we plot one pair of functions to find an interval that brackets the root.
+In fact, we plot the difference \( S_{k-1}(a) - S_k(a) \). 
+Note that the function can only be evaluated for \( |a| < k \).
+
+```{r}
+#exercise 11.4
+# Set the degree of freedom for the t-distribution
+k <- 9
+# Generate a sequence for a
+a <- seq(1, sqrt(k) - 0.01, length = 100)
+# Calculate the values of y1 and y2 based on the given equations
+y1 <- 1 - pt(sqrt(a^2 * (k - 1)/(k - a^2)), df = k - 1)
+y2 <- 1 - pt(sqrt(a^2 * k/(k + 1 - a^2)), df = k)
+# Plot the difference y1 - y2
+plot(a, y1 - y2, type = "l", main = "Difference between S(k-1)(a) and S(k)(a)",
+     xlab = "a", ylab = "S(k-1)(a) - S(k)(a)")
+# Define the function to find the root
+f <- function(a, k) {
+  c1 <- sqrt(a^2 * (k - 1)/(k - a^2))   # Expression for the first term
+  c2 <- sqrt(a^2 * k/(k + 1 - a^2))     # Expression for the second term
+  # Calculate the probabilities
+  p1 <- pt(c1, df = k - 1, lower.tail = FALSE)
+  p2 <- pt(c2, df = k, lower.tail = FALSE)
+  # Return the difference between the two probabilities
+  p1 - p2
+}
+# Define a sequence of k values for which we want to find the roots
+K <- c(4:25, 100, 500, 1000)
+# Initialize vectors to store the results
+n <- length(K)
+r <- rep(0, n)
+pr <- rep(0, n)
+# Loop through the values of k to find the roots and probabilities
+for (i in 1:n) {
+  k <- K[i]
+  u <- uniroot(f, lower = 1, upper = 2, k = k)  # Find the root for each k
+  r[i] <- u$root                            # Store the root
+  pr[i] <- pt(r[i], df = k - 1, lower.tail = FALSE)  # Compute the probability for the root
+}
+# Combine the k values, roots, and probabilities into a matrix
+cbind(K, r, pr)
+# Store the previously computed roots in the variable a
+a <- r
+# Calculate ck for each a and corresponding k
+ck <- sqrt(a^2 * K / (K + 1 - a^2))
+# Combine K, a, and ck into a matrix and display the result
+cbind(K, a, ck)
+
+```
+
+
+
+
+## Add_Ex : Answer
+
+## Answer MLE  
+\[
+Y_i = T_i \cdot I(T_i \leq \tau) + \tau \cdot I(T_i > \tau)
+\]
+where \( I(\cdot) \) is the indicator function that equals 1 if the condition inside is true and 0 otherwise.
+Thus, we have two cases for each observation \( Y_i \):
+
+\begin{itemize}
+  \item \textbf{Case 1 (Uncensored)}: \( Y_i = T_i \), when \( T_i \leq \tau \); \textbf{Case 2 (Censored)}: \( Y_i = \tau \), when \( T_i > \tau \)
+\end{itemize}
+Thus, the likelihood function for a single observed value \( Y_i \) is:
+
+\[
+L(\lambda; Y_i) =
+\begin{cases}
+\lambda e^{-\lambda Y_i}, & \text{if } Y_i < \tau, \\
+e^{-\lambda \tau}, & \text{if } Y_i = \tau.
+\end{cases}
+\]
+
+Given \( n \) independent observations, the full likelihood is the product of these individual likelihoods:
+\[
+L(\lambda; Y_1, Y_2, \dots, Y_n) = \prod_{i=1}^n L(\lambda; Y_i).
+\]
+The log-likelihood function for the entire data is:
+\[
+\ell(\lambda) = \sum_{i=1}^n \log L(\lambda; Y_i).
+\]
+\begin{itemize}
+    \item For uncensored observations \( Y_i < \tau \), we have:
+    \[
+    \sum_{i: Y_i < \tau} \log(\lambda e^{-\lambda Y_i}) = \sum_{i: Y_i < \tau} \left( \log \lambda - \lambda Y_i \right)=\sum_{i: Y_i < \tau} \log \lambda - \lambda \sum_{i: Y_i < \tau} Y_i
+    \]
+      \item For censored observations \( Y_i = \tau \), we have:
+    \[
+    \sum_{i: Y_i = \tau} \log(e^{-\lambda \tau}) = -\lambda \tau \sum_{i: Y_i = \tau}1
+    \]
+\end{itemize}
+Thus, the log-likelihood function becomes:
+\[
+\ell(\lambda) = n_{\text{1}} \log \lambda - \lambda \sum_{i: Y_i < \tau} Y_i - \lambda \tau n_{\text{2}},
+\]
+where \( n_{\text{1}} \) is the number of uncensored observations (\( Y_i < \tau \)) and \( n_{\text{2}} \) is the number of censored observations (\( Y_i = \tau \)).
+
+To find the MLE of \( \lambda \), we take the derivative of the log-likelihood with respect to \( \lambda \) and set it to zero:
+\[
+\frac{d}{d\lambda} \ell(\lambda) = \frac{n_{\text{1}}}{\lambda} - \sum_{i: Y_i < \tau} Y_i - \tau n_{\text{2}} = 0.
+\]
+Solving for \( \lambda \), we get:
+\[
+\hat{\lambda} = \frac{n_{\text{1}}}{\sum_{i: Y_i < \tau} Y_i + \tau n_{\text{2}}}.
+\]
+
+```{r}
+# Observed data
+Y <- c(0.54, 0.48, 0.33, 0.43, 1.00, 1.00, 0.91, 1.00, 0.21, 0.85)
+tau <- 1  # Censoring threshold
+# Separate censored and uncensored data
+uncensored <- Y[Y < tau]
+censored <- Y[Y == tau]
+n_1 <- length(uncensored)
+n_2 <- length(censored)
+mle_lambda <- n_1 / (sum(uncensored) + tau * n_2)
+```
+## Answer EM  
+To apply the EM algorithm, the latent (unobserved) variables \( Z_i \), where \( Z_i \) indicates whether \( T_i \) is censored or not:
+
+\[Z_i = 0 \quad \text{means} \quad Y_i = T_i \quad \text{(uncensored)}\]
+\[Z_i = 1 \quad \text{means} \quad Y_i = \tau \quad \text{(censored)}\]
+
+The joint likelihood is  both the observed data \( Y_i \) and the latent data \( Z_i \).  For each observation, we write the likelihood of \( Y_i \) conditioned on \( Z_i \) as:
+\[
+L(\lambda; Y_i, Z_i) =
+\begin{cases}
+\lambda e^{-\lambda Y_i}, & \text{if } Z_i = 0 \\
+e^{-\lambda \tau}, & \text{if } Z_i = 1
+\end{cases}
+\]
+The likelihood for the entire dataset is then the product of the likelihoods for each observation, given \( Z_i \):
+\[
+L(\lambda; Y_1, \dots, Y_n, Z_1, \dots, Z_n) = \prod_{i=1}^{n} \left\{
+\begin{array}{ll}
+\lambda e^{-\lambda Y_i}, & \text{if } Z_i = 0 \\
+e^{-\lambda \tau}, & \text{if } Z_i = 1
+\end{array}
+\right.
+\]
+The log-likelihood function for the complete data is:
+\[\log L(\lambda; Y_1, \dots, Y_n, Z_1, \dots, Z_n) = \sum_{i=1}^{n} \left[ Z_i (-\lambda \tau) + (1 - Z_i) \left( \log(\lambda) - \lambda Y_i \right) \right]\]
+
+Expectation Step (E-Step)
+
+The expectation of \( Z_i \) is:
+
+\[
+E[Z_i \mid Y_i, \lambda^{(t)}] = P(Z_i = 1 \mid Y_i, \lambda^{(t)}) = P(T_i > \tau \mid Y_i) =
+\begin{cases}
+e^{-\lambda^{(t)} \tau}, & \text{if } Y_i = \tau \\
+1, & \text{if } Y_i < \tau
+\end{cases}
+\]
+Thus, the latent variable \( Z_i \) to be:
+
+\[
+Z_i = 
+\begin{cases}
+1 \quad \text{(censored)} \quad \text{with probability} \quad e^{-\lambda^{(t)} \tau}, \\
+0 \quad \text{(uncensored)} \quad \text{with probability} \quad 1 - e^{-\lambda^{(t)} \tau}.
+\end{cases}
+\]
+
+Maximization Step (M-Step)
+The complete-data log-likelihood is given by:
+
+\[
+Q(\lambda \mid \lambda^{(t)}) = \sum_{i=1}^{n} \left[ E[Z_i \mid Y_i, \lambda^{(t)}] (-\lambda \tau) + (1 - E[Z_i \mid Y_i, \lambda^{(t)}]) \left( \log(\lambda) - \lambda Y_i \right) \right]
+\]
+\[
+Q(\lambda \mid \lambda^{(t)}) = -\lambda \tau \sum_{i : Y_i = \tau} e^{-\lambda^{(t)} \tau} + \log(\lambda) \sum_{i : Y_i < \tau} \left( 1 - e^{-\lambda^{(t)} \tau} \right) - \lambda \sum_{i : Y_i < \tau} Y_i \left( 1 - e^{-\lambda^{(t)} \tau} \right)
+\]
+
+Solving this equation for \( \lambda \) will give the updated estimate \( \lambda^{(t+1)} \).
+In the M-step, we maximize the expected log-likelihood \( Q(\lambda \mid \lambda^{(t)}) \) with respect to \( \lambda \) to find the new estimate \( \lambda^{(t+1)} \). 
+\[
+\lambda^{(t+1)} = \frac{\sum_{i=1}^n \left( 1 - E[Z_i \mid Y_i, \lambda^{(t)}] \right)}{\sum_{i=1}^n \left( 1 - E[Z_i \mid Y_i, \lambda^{(t)}] \right) Y_i + \tau \sum_{i=1}^n E[Z_i \mid Y_i, \lambda^{(t)}]}
+\]
+\[
+\lambda^{(t+1)} = \frac{\sum_{i : Y_i < \tau} \left( 1 - e^{-\lambda^{(t)} \tau} \right)}{\tau \sum_{i : Y_i = \tau} e^{-\lambda^{(t)} \tau} + \sum_{i : Y_i < \tau} Y_i \left( 1 - e^{-\lambda^{(t)} \tau} \right)}
+\]
+
+
+
+
+\title{EM Algorithm for Estimating $\lambda$}
+Set an initial value for $\lambda^{(0)}$.
+
+2. Expectation Step (E-Step):For each observation $Y_i$:
+\[
+E[Z_i \mid Y_i, \lambda^{(t)}] = 
+\begin{cases}
+e^{-\lambda^{(t)} \tau}, & \text{if } Y_i = \tau \quad \text{(censored)} \\
+0, & \text{if } Y_i < \tau \quad \text{(uncensored)}
+\end{cases}
+\]
+
+3. Maximization Step (M-Step): Compute the updated estimate $\lambda^{(t+1)}$:
+\[
+\lambda^{(t+1)} = \frac{\sum_{i : Y_i < \tau} \left( 1 - e^{-\lambda^{(t)} \tau} \right)}{\tau \sum_{i : Y_i = \tau} e^{-\lambda^{(t)} \tau} + \sum_{i : Y_i < \tau} Y_i \left( 1 - e^{-\lambda^{(t)} \tau} \right)}
+\]
+4. Iteration:  Repeat Steps 2 and 3 until convergence.
+
+
+```{r}
+library(knitr)
+# Define observed data and censoring threshold
+Y <- c(0.54, 0.48, 0.33, 0.43, 1.00, 1.00, 0.91, 1.00, 0.21, 0.85)
+tau <- 1  # Censoring threshold
+# Set an initial value for lambda
+lambda <- 1 # Initial guess for lambda
+tol <- 1e-6    # Convergence tolerance
+max_iter <- 100 # Maximum number of iterations
+# EM algorithm to estimate lambda
+for (t in 1:max_iter) {
+  # E-Step: Calculate expected values of Z_i
+  Z_exp <- ifelse(Y == tau, exp(-lambda * tau), 0)
+   # M-Step: Update lambda using the formula
+  num <- sum(ifelse(Y < tau, 1 - exp(-lambda * tau), 0))
+  denom <- tau * sum(ifelse(Y == tau, exp(-lambda * tau), 0)) +
+                 sum(ifelse(Y < tau, Y * (1 - exp(-lambda * tau)), 0))
+  lambda_new <- num / denom
+  # Check for convergence
+  if (abs(lambda_new - lambda) < tol) {
+    lambda <- lambda_new
+    break
+  }
+  
+  # Update lambda for the next iteration
+  lambda <- lambda_new
+}
+em_lambda <- lambda
+# Prepare data for table
+results <- data.frame(
+  Method = c("EM Algorithm", "MLE"),
+  Estimated_Lambda = c(round(em_lambda, 4), round(mle_lambda, 4))
+)
+# Display the table in console
+kable(results, col.names = c("Method", "Estimated Lambda"), align = "c")
+```
+## comment
+
+The EM algorithm estimated \( \lambda \) at 1.5279, which accounts for censored data by iteratively estimating whether each observation is censored, allowing \( \lambda \) to adjust to fit partially observed data. In contrast, the MLE estimate of \( \lambda \) is 1.0370, calculated directly from observed data without iterative adjustments for latent variables.  Overall, the EM algorithm is often preferred for censored datasets, as it offers a more accurate approximation by considering latent factors.
+
+
+## HW8
+
+## Exercises 11.7 (page 354, Statistical Computing with R) : Answer
+
+We use the boot package in R, which contains the simplex function for solving linear programming problems. See Example 11.16. The constraints can be written as \( A_1 x \leq b_1 \) and \( x \geq 0 \).
+Enter the coefficients of the objective function in \( a \).
+```{r}
+library(boot)
+A1 <- rbind(c(2, 1, 1),  # Coefficients for the first constraint
+            c(1, -1, 3))  # Coefficients for the second constraint
+b1 <- c(2, 3)  # The right-hand sides of the inequalities
+a <- c(4, 2, 9)  # Coefficients for the objective function
+# Use the simplex algorithm to solve the minimization problem
+simplex(a = a, A1 = A1, b1 = b1, maxi = TRUE)
+```
+
+##  Ex3 (page 204, Advanced R) : Answer
+```{r}
+library(knitr)
+data(mtcars) # Load dataset
+# List of formulas
+formulas <- list(
+  mpg ~ disp, 
+  mpg ~ I(1 / disp), 
+  mpg ~ disp + wt, 
+  mpg ~ I(1 / disp) + wt
+)
+# Empty list to store models
+model <- list()
+# Fit models for each formula
+for (i in 1:length(formulas)) {
+  model[[i]] <- lm(formulas[[i]], data = mtcars)
+}
+# Initialize an empty data frame for the summary table
+summary_table <- data.frame(
+  Model = character(),  Estimate = numeric(),
+  Std_Error = numeric(),  t_Value = numeric(),
+  P_Value = character(),  stringsAsFactors = FALSE
+)
+# Extract summary statistics for each model
+for (i in 1:length(model)) {
+  model_summary <- summary(model[[i]])
+  coef_table <- data.frame(
+    Model = paste("Model", i),
+    Estimate = round(model_summary$coefficients[, 1], 3),
+    Std_Error = round(model_summary$coefficients[, 2], 3),
+    t_Value = round(model_summary$coefficients[, 3], 3),
+    P_Value = formatC(model_summary$coefficients[, 4], format = "e", digits = 2)
+  )
+  summary_table <- rbind(summary_table, coef_table)
+}
+# Display the summary table using kable
+kable(summary_table,
+  col.names = c("Model", "Estimate", "Std. Error", "t-Value", "P-Value"),
+  caption = "Summary of Linear Models for Different Formulas"
+)
+# Fit models using lapply
+models_lapply <- lapply(formulas, function(formula) lm(formula, data = mtcars))
+# Initialize an empty data frame for the summary table
+summary_table_lapply <- data.frame(
+  Model = character(),    Estimate = numeric(),
+  Std_Error = numeric(),  t_Value = numeric(),
+  P_Value = character(),  stringsAsFactors = FALSE
+)
+
+# Generate a summary table for each model fitted with lapply
+for (i in 1:length(models_lapply)) {
+  # Extract model summary
+  model_summary_lapply <- summary(models_lapply[[i]])
+  # Extract coefficients and their statistics
+  coef_table_lapply <- data.frame(
+    Model = paste("Model", i),
+    Term = rownames(model_summary_lapply$coefficients),
+    Estimate = round(model_summary_lapply$coefficients[, 1], 3),
+    Std_Error = round(model_summary_lapply$coefficients[, 2], 3),
+    t_Value = round(model_summary_lapply$coefficients[, 3], 3),
+    P_Value = formatC(model_summary_lapply$coefficients[, 4], format = "e", digits = 2)
+  )
+  # Append to the summary table
+  summary_table_lapply <- rbind(summary_table_lapply, coef_table_lapply)
+}
+
+# Display the summary table using kable
+kable(
+  summary_table_lapply,
+  col.names = c("Model", "Term", "Estimate", "Std. Error", "t-Value", "P-Value"),
+  caption = "Summary of Linear Models Fitted with lapply"
+)
+# Extract key information into a data frame for the table
+results <- data.frame(
+  Model = character(),  Formula = character(),
+  R_Squared = numeric(),  Adj_R_Squared = numeric(),
+  AIC = numeric(),  BIC = numeric(),
+  stringsAsFactors = FALSE
+)
+for (i in 1:length(model)) {
+  model_summary <- summary(model[[i]])
+  results <- rbind(
+    results,
+    data.frame(
+      Model = paste("Model", i),
+      Formula = deparse(formulas[[i]]),
+      R_Squared = round(model_summary$r.squared, 3),
+      Adj_R_Squared = round(model_summary$adj.r.squared, 3),
+      AIC = round(AIC(model[[i]]), 2),
+      BIC = round(BIC(model[[i]]), 2)
+    )
+  )
+}
+# Display the table using knitr::kable
+kable(results, format = "markdown", caption = "Summary of Linear Models")
+```
+
+
+##  Ex4 (page 204, Advanced R) : Answer
+```{r}
+# Load the mtcars dataset
+data(mtcars)
+# Generate bootstrap replicates
+bootstraps <- lapply(1:10, function(i) {
+  rows <- sample(1:nrow(mtcars), replace = TRUE)  # Sample with replacement
+  mtcars[rows, ]  # Return the bootstrap sample
+})
+# Using for loop 
+# empty list to store the model results
+ models_boot <- list()
+# Fit the model to each bootstrap replicate using a for loop
+for (i in 1:length(bootstraps)) {
+  models_boot[[i]] <- lm(mpg ~ disp, data = bootstraps[[i]])
+}
+# Combine summaries from models into a single data frame
+summary_table <- data.frame(
+  Model = integer(),
+  Estimate = numeric(),
+  Std_Error = numeric(),
+  t_Value = numeric(),
+  P_Value = character(),
+  stringsAsFactors = FALSE
+)
+# Loop through each model to extract statistics
+for (i in 1:length(models_boot)) {
+  model_summary <- summary(models_boot[[i]])
+  coef_table <- data.frame(
+    Model = i,
+    Estimate = round(model_summary$coefficients[, 1], 3),
+    Std_Error = round(model_summary$coefficients[, 2], 3),
+    t_Value = round(model_summary$coefficients[, 3], 3),
+    P_Value = formatC(model_summary$coefficients[, 4], format = "e", digits = 2)
+  )
+  summary_table <- rbind(summary_table, coef_table)
+}
+# Display the summary table in kable format
+kable(
+  summary_table,
+  col.names = c("Model",  "Estimate", "Std. Error", "t-Value", "P-Value"),
+  caption = "Bootstrap Linear Model Summary"
+)
+#Using lapply() without anonymous function ---
+# Define a named function to fit the model
+fit_model <- function(bootstrap_sample) {
+  lm(mpg ~ disp, data = bootstrap_sample)
+}
+# Apply the named function to each bootstrap replicate using lapply
+models_lapply <- lapply(bootstraps, fit_model)
+# Combine summaries from models into a single data frame
+summary_table_lapply <- data.frame(
+  Model = integer(),
+  Estimate = numeric(),
+  Std_Error = numeric(),
+  t_Value = numeric(),
+  P_Value = character(),
+  stringsAsFactors = FALSE
+)
+
+# Loop through each model to extract statistics
+for (i in 1:length(models_lapply)) {
+  model_summary_lapply <- summary(models_lapply[[i]])
+  coef_table_lapply <- data.frame(
+    Model = i,
+    Estimate = round(model_summary_lapply$coefficients[, 1], 3),
+    Std_Error = round(model_summary_lapply$coefficients[, 2], 3),
+    t_Value = round(model_summary_lapply$coefficients[, 3], 3),
+    P_Value = formatC(model_summary_lapply$coefficients[, 4], format = "e", digits = 2)
+  )
+  summary_table_lapply <- rbind(summary_table_lapply, coef_table_lapply)
+}
+kable(summary_table_lapply,
+  col.names = c("Model", "Estimate", "Std. Error", "t-Value", "P-Value"),
+  caption = "Bootstrap Linear Model Summary (Using lapply)")
+
+
+```
+
+
+##  Ex5 (page 204, Advanced R) : Answer
+## Answer 
+```{r}
+# Load required library
+library(knitr)
+data(mtcars)
+# Generate bootstrap replicates
+bootstraps <- lapply(1:10, function(i) {
+  rows <- sample(1:nrow(mtcars), replace = TRUE)  # Sample with replacement
+  mtcars[rows, ]  # Return the bootstrap sample
+})
+#fit the model
+fit_model <- function(bootstrap_sample) {
+  lm(mpg ~ disp, data = bootstrap_sample)
+}
+# extract R-squared
+rsq <- function(mod) summary(mod)$r.squared
+# --- Using for loop ---
+# empty list to store the models
+models_for <- list()
+# Fit the model to each bootstrap replicate using a for loop
+for (i in 1:length(bootstraps)) {
+  models_for[[i]] <- lm(mpg ~ disp, data = bootstraps[[i]])
+}
+# Extract R-squared values for for loop models
+rsq_for <- sapply(models_for, rsq)
+# --- Using lapply ---
+# Fit the model to each bootstrap replicate using lapply
+models_lapply <- lapply(bootstraps, fit_model)
+# Extract R-squared values for lapply models
+rsq_lapply <- sapply(models_lapply, rsq)
+# Combine the results into a single data frame
+combined_table <- data.frame(
+  Model = 1:length(models_for),
+  R_Squared_For = rsq_for,
+  R_Squared_lapply = rsq_lapply
+)
+# Display the combined table in a neat format
+kable(
+  combined_table,
+  col.names = c("Model", "R-Squared (For Loop)", "R-Squared (lapply)"),
+  caption = "Comparison of R-Squared Values from For Loop and lapply"
+)
+
+```
+
+
+##  Ex3 (page 213-214, Advanced R) : Answer
+```{r}
+# Simulate 100 t-test trials
+trials <- replicate(
+  100,
+  t.test(rpois(10, 10), rpois(7, 10)),
+  simplify = FALSE
+)
+# Extract p-values using sapply and an anonymous function
+p_values <- sapply(trials, function(x) x$p.value)
+print(p_values)
+```
+
+##  Ex6 (page 213-214, Advanced R) : Answer
+```{r}
+lapply2 <- function(f, n, type = "numeric", ...) {
+  # Ensure f is a function
+  f <- match.fun(f)
+  # Apply the function with Map and return the results using vapply
+  if (type == "numeric") {
+    y <- vapply(Map(f, ...), cbind, numeric(n))
+  } else if (type == "character") {
+    y <- vapply(Map(f, ...), cbind, character(n))
+  } else if (type == "complex") {
+    y <- vapply(Map(f, ...), cbind, complex(n))
+  } else if (type == "logical") {
+    y <- vapply(Map(f, ...), cbind, logical(n))
+  } else {
+    stop("Unknown type specified.")
+  }
+  
+  return(y)
+}
+# Set the random seed for reproducibility
+set.seed(123)
+# Generate 100 random t-tests
+trials <- replicate(
+  100,
+  t.test(rpois(10, 10), rpois(7, 10)),
+  simplify = FALSE
+)
+# Define the function to extract p-values
+p <- function(x) {
+  x$p.value
+}
+# Apply lapply2 to extract the p-values from the list of t-test results
+p_values <- lapply2(p, 1, "numeric", trials)
+# Print the first few p-values
+print(p_values)
+```
+
+##  Ex4 (page 365, Advanced R) : Answer
+
+```{r}
+library(microbenchmark)
+chisq.test2<-function(x,y){
+  input<-as.table(rbind(x,y))
+  out<-chisq.test(input)$statistic
+  out
+}
+mya<-c(57,23,46);myb<-c(24,88,76)    #example
+chisq.test2(mya,myb)        
+chisq.test(rbind(mya,myb))
+microbenchmark(t1=chisq.test2(mya,myb),t2=chisq.test(rbind(mya,myb)))
+```
+
+##  Ex5 (page 365, Advanced R) : Answer
+
+```{r}
+# Define a faster version of table() for two integer vectors
+table2 <- function(x, y) {
+  # Compute the unique levels of x and y
+  levels_x <- sort(unique(x))
+  levels_y <- sort(unique(y))
+  # Initialize a matrix to store counts
+  result <- matrix(0, nrow = length(levels_x), ncol = length(levels_y),
+                   dimnames = list(levels_x, levels_y))
+  # Populate the table by matching x and y to their levels
+  for (i in seq_along(x)) {
+    result[as.character(x[i]), as.character(y[i])] <- result[as.character(x[i]), 
+                                                             as.character(y[i])] + 1
+  }
+  return(result)
+}
+# Example 
+x <- c(1, 2, 2, 3, 1, 3)
+y <- c(2, 2, 3, 3, 1, 1)
+# Test the optimized table2() and compare with base R table()
+print("Result from table2:")
+print(table2(x, y))
+print("Result from table:")
+print(table(x, y))
+# Benchmarking
+library(microbenchmark)
+microbenchmark(
+  table2 = table2(x, y),
+  table = table(x, y)
+)
+
+```
+
+
+
+
+## HW9 
+
+## Write an Rcpp function for Exercise 9.8 (page 278, Statistical  Computing with R)
+
+
+Use the Gibbs sampler to generate a chain with target joint density f (x, y).
+In the example below, the parameters are \(a = 2, b = 3, n = 10.\)
+For a bivariate distribution \((X, Y)\), at each iteration the Gibbs sampler:
+
+#define C++ and R function
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+#C++ function
+# C++ function
+library(Rcpp)
+cppFunction('
+NumericMatrix gibbsC(int N, int n, double a, double b, NumericVector x) {
+  //  result matrix
+  NumericMatrix mat(N, 2);
+  // Set the initial values
+  mat(0, 0) = x[0]; // x[0]  first element of x
+  mat(0, 1) = x[1]; // x[1] second element of x
+  // Gibbs sampling loop
+  for (int i = 1; i < N; i++) {
+    double y = mat(i - 1, 1); // previous value of Beta variable
+    mat(i, 0) = rbinom(1, n, y)[0]; // Binomial(n, y)
+    double k = mat(i, 0);           //  Binomial variable
+    mat(i, 1) = rbeta(1, k + a, n - k + b)[0]; // Beta(k + a, n - k + b)
+  }
+  
+  return mat;
+}
+')
+# R function
+gibbsR <- function(N, n, a, b, x) {
+  #  result matrix
+  mat <- matrix(0, nrow = N, ncol = 2)
+  # initial values
+  mat[1, ] <- x
+  # Gibbs sampling loop
+  for (i in 2:N) {
+    y <- mat[i - 1, 2] # Get previous value of Beta variable
+    mat[i, 1] <- rbinom(1, n, y) # Binomial(n, y)
+    k <- mat[i, 1]               # Binomial variable
+    mat[i, 2] <- rbeta(1, k + a, n - k + b) #  Beta(k + a, n - k + b)
+  }
+  return(mat)
+}
+
+
+```
+## Ex1
+
+Compare the corresponding generated random numbers with
+ those by the R function you wrote using the function “qqplot”.
+#compare C++ to R
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+N<-20000
+n<-10
+x <- c(0,0.5)
+a<-1.5
+b<-1.5
+C<-gibbsC(N,  n, a, b,x)
+R<-gibbsR(N,  n, a, b,x)
+par(mfrow=c(1,2))
+qqplot(R[2001:N,1],C[2001:N,1],xlab='R_function',ylab='cpp_function',main='1')
+abline(0, 1)
+qqplot(R[2001:N,2],C[2001:N,2],xlab='R_function',ylab='cpp_function',main='2')
+abline(0, 1)
+```
+
+## Ex2
+ 
+ Compare the computation time of the two functions with the
+ function “microbenchmark”.
+ 
+#time comparation
+
+```{r echo=TRUE, message=FALSE, warning=FALSE}
+library(microbenchmark)
+ts <- microbenchmark(C_function=gibbsC(N,  n, a, b,x),R_function=gibbsR(N, n, a, b ,x))
+print(summary(ts)[, c(1,3,5,6)])
+```
+
+##  Comments results
+According to the experimental results,  C++ (via Rcpp) is significantly faster for iterative algorithms like Gibbs sampling. For computationally intensive tasks with non-vectorizable operations, C++ is the preferred choice to achieve optimal performance.
+
+
+

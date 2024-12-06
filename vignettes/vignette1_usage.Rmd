@@ -1,0 +1,316 @@
+---
+title: "BL22204009-Package"
+output: rmarkdown::html_vignette
+vignette: >
+  %\VignetteIndexEntry{BL22204009-Package}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+##  Implementing Poisson, Exponential with Conjugate Priors and Gibbs Sampling and Logistic Models 
+## Introduction
+This project involves creating an R package to implement  Poisson Inference with Conjugate Prior , exponential inference with Conjugate Prior, and Binomial distributions.The package aims to provide efficient tools for Bayesian analysis and posterior estimation tailored to these distributions usin gibbs sampling. 
+
+
+## Poisson Inference with Conjugate Prior 
+
+
+The \texttt{bayesian\_poisson\_gamma\_R} function implements Bayesian inference for a Poisson distribution using a Gamma prior. This is achieved through Gibbs sampling to estimate the posterior distribution of the Poisson rate parameter (\(\lambda\)).
+
+The posterior distribution for \(\lambda\) is also Gamma distributed:
+\[
+\lambda \mid y \sim \text{Gamma}(\alpha + \sum_{i=1}^n y_i, \beta + n).
+\]
+
+```{r setup}
+library(BL22204009)
+library(knitr)
+
+```
+```{r}
+bayesian_poisson_gamma_R <- function(data, alpha_prior, beta_prior, n_iter = 10000) {
+  n <- length(data)# Number of observations
+  sum_data <- sum(data) # Sum of observed data
+  lambda_samples <- numeric(n_iter) # Vector to store posterior samples
+  lambda_current <- 1.0 # Initial guess for lambda
+  # Gibbs sampling loop
+  for (i in 1:n_iter) {
+    # Posterior shape parameter: alpha + sum(data)
+    posterior_shape <- alpha_prior + sum_data
+    # Posterior scale parameter: beta_prior + n (number of data points)
+    posterior_scale <- 1 / (1 / beta_prior + n)
+    lambda_current <- rgamma(1, shape = posterior_shape, rate = posterior_scale)
+    lambda_samples[i] <- lambda_current
+  }
+  return(lambda_samples)
+}
+```
+```{r}
+# Example data: Observed counts from a Poisson process
+data <- c(3, 4, 2, 5, 6, 3, 2, 4, 3, 5)
+# Prior parameters for the Gamma distribution (conjugate prior for Poisson rate)
+alpha_prior <- 2    # Prior shape parameter
+beta_prior <- 1     # Prior rate parameter
+# Run the Bayesian inference function
+lambda_samples <- bayesian_poisson_gamma_R(data, alpha_prior, beta_prior, n_iter = 10000)
+# Summarize the posterior samples
+summary(lambda_samples)
+# Plot the posterior distribution
+hist(lambda_samples, breaks = 30, probability = TRUE, 
+     main = "Posterior Distribution of Lambda", 
+     xlab = "Lambda")
+lines(density(lambda_samples), col = "blue", lwd = 2)
+```
+
+## Exponential Inference with Conjugate Prior 
+
+The \texttt{gibbs\_exponential\_R} function extends the Bayesian inference approach to the exponential distribution, which is commonly used to model time-to-event data, such as the time between failures of machines or the survival time of patients. In this approach, the Gamma prior is employed because it is conjugate to the Exponential likelihood. This conjugacy simplifies the Bayesian updating process, enabling efficient sampling of the posterior distribution of the rate parameter (\(\lambda\)).
+
+```{r}
+gibbs_exponential_R <- function(y, alpha, beta, n_iter = 1000, return_mean = FALSE) {
+  n <- length(y)             # Number of observations
+  sum_y <- sum(y)            # Sufficient statistic for exponential data
+  lambda_samples <- numeric(n_iter) # Vector to store samples
+  for (iter in 1:n_iter) {
+    alpha_post <- alpha + n
+    beta_post <- beta + sum_y
+    lambda_samples[iter] <- rgamma(1, shape = alpha_post, rate = beta_post)
+  }
+  if (return_mean) {
+    return(mean(lambda_samples)) # Return the mean of the sampled lambdas
+  } else {
+    return(lambda_samples) # Return all samples
+  }
+}
+```
+```{r}
+# Compute MSE and Bias for Gibbs Sampling
+set.seed(123)
+# True rate parameter
+lambda_true <- 2
+y <- rexp(100, rate = lambda_true)
+# Perform Gibbs sampling
+samples <- gibbs_exponential_R(y, alpha = 1, beta = 1, n_iter = 1000)
+posterior_mean <- mean(samples)
+bias <- posterior_mean - lambda_true
+mse <- mean((samples - lambda_true)^2)
+results <- data.frame(
+  parameter = c("True Lambda", "Pos_Mean_Lambda", "Bias", "MSE"),
+  Value = c(lambda_true, posterior_mean, bias, mse)
+)
+cat("Estimation Results:\n")
+kable(results, format = "markdown")
+
+```
+
+##  Binomial logistic regression model 
+
+## Logistic Function
+
+In this section, the logistic function is introduced, which is a transformation used in logistic regression models. The logistic function maps real-valued input to a probability in the range \([0, 1]\), defined as:
+\[
+\sigma(z) = \frac{1}{1 + e^{-z}},
+\]
+where \(z\) is the linear predictor, typically written as \(z = X\beta\), with \(X\) representing the predictor variables and \(\beta\) the model coefficients.
+
+The logistic function is crucial for modeling binary outcomes, such as success/failure or yes/no scenarios. It ensures that the predicted values lie within the valid probability range of \([0, 1]\).
+
+```{r}
+
+logistic_R <- function(x) {
+  return(1 / (1 + exp(-x)))}
+# Example
+x <- c(-2, -1, 0, 1, 2)
+logistic_values <- logistic_R(x)
+print(logistic_values)
+# Output: Probabilities corresponding to the input values
+```
+
+##Log-Likelihood Calculation
+The \texttt{log\_likelihood\_R} function computes the log-likelihood of the observed data given a set of predictor variables (\(X\)) and model coefficients (\(\beta\)). The log-likelihood function for logistic regression is given by:
+\[
+\ell(\beta) = \sum_{i=1}^n \left[ y_i \log(\sigma(x_i^T \beta)) + (1 - y_i) \log(1 - \sigma(x_i^T \beta)) \right],
+\]
+```{r}
+
+log_likelihood_R <- function(X, y, beta) {
+  n <- nrow(X)
+  p <- ncol(X)
+  ll <- 0
+  for (i in 1:n) {
+    eta <- sum(X[i, ] * beta)
+    pi <- logistic_R(eta)
+    ll <- ll + y[i] * log(pi) + (1 - y[i]) * log(1 - pi)
+  }
+  return(-ll)
+}
+
+# Example
+X <- matrix(c(1, 1, 1, 0, 1, 0), ncol = 2)  # Two predictors (including intercept)
+y <- c(1, 0, 1)  # Binary outcomes
+beta <- c(0.5, -0.3)  # Coefficients
+neg_log_likelihood <- log_likelihood_R(X, y, beta)
+print(neg_log_likelihood)
+# Output: A single numeric value representing the negative log-likelihood
+
+
+```
+
+## Gradient Descent Optimization
+The \texttt{bino\_logistic\_R} function implements the logistic regression model using gradient descent optimization. In this method, the coefficients are updated iteratively by taking steps proportional to the negative gradient:
+\[\beta^{(t+1)} = \beta^{(t)} - \alpha \nabla \ell(\beta^{(t)})\]
+where:
+ \(\beta^{(t)}\) represents the coefficients at iteration \(t\),
+     \(\alpha\) is the learning rate (step size),
+     \(\nabla \ell(\beta^{(t)})\) is the gradient of the log-likelihood function at iteration \(t\).
+
+The updates continue until convergence criteria are met, i.e., when the change in the coefficients becomes sufficiently small. This process allows the model to find the best-fitting parameters for the logistic regression model.
+
+
+
+```{r}
+gradient_R <- function(X, y, beta) {
+  n <- nrow(X)
+  p <- ncol(X)
+  grad <- numeric(p)
+  for (j in 1:p) {
+    grad[j] <- 0
+    for (i in 1:n) {
+      eta <- sum(X[i, ] * beta)
+      pi <- logistic_R(eta)
+      grad[j] <- grad[j] + (y[i] - pi) * X[i, j]
+    }
+  }
+  return(-grad)
+}
+# Example
+gradient_values <- gradient_R(X, y, beta)
+print(gradient_values)
+# Output: A numeric vector of gradients for the coefficients
+
+```
+The logistic regression model, combined with gradient descent optimization, is a powerful method for modeling binary outcomes. The logistic function ensures predictions are constrained to the range \([0, 1]\), while the log-likelihood function and its gradient allow for efficient parameter estimation. By iteratively updating the coefficients through gradient descent, we obtain the model parameters that maximize the likelihood of the observed data.
+
+```{r}
+
+bino_logistic_R <- function(X, y, alpha = 0.01, max_iter = 1000, tol = 1e-6) {
+  p <- ncol(X)
+  beta <- rep(0, p)  # Initialize coefficients
+  for (iter in 1:max_iter) {
+    grad <- gradient_R(X, y, beta)  # Calculate gradient
+    beta_new <- beta - alpha * grad  # Update coefficients
+    if (sum(abs(beta_new - beta)) < tol) {
+      cat("Convergence reached at iteration", iter, "\n")
+      return(beta_new)
+    }
+    beta <- beta_new  # Update beta
+  }
+  return(beta)
+}
+# Example
+X <- matrix(c(1, 1, 1, 0, 1, 0), ncol = 2)  # Predictors (including intercept)
+y <- c(1, 0, 1)  # Binary outcomes
+beta_estimates <- bino_logistic_R(X, y, alpha = 0.01, max_iter = 1000, tol = 1e-6)
+print(beta_estimates)
+# Output: Estimated coefficients after gradient descent
+
+```
+
+## Computation with RCPP
+```{r}
+# Load necessary libraries
+library(microbenchmark)
+library(Rcpp)
+# R implementation of Gibbs sampling for exponential
+gibbs_exponential_R <- function(y, alpha, beta, n_iter) {
+  n <- length(y)                     # Number of observations
+  sum_y <- sum(y)                    # Sufficient statistic
+  lambda_samples <- numeric(n_iter)  # Output vector for lambda samples
+  for (i in 1:n_iter) {
+    # Update posterior parameters
+    alpha_post <- alpha + n
+    beta_post <- beta + sum_y
+    # Sample from Gamma distribution
+    lambda_samples[i] <- rgamma(1, shape = alpha_post, rate = beta_post)
+  }
+  return(lambda_samples)
+}
+
+# C++ implementation of Gibbs sampling
+cppFunction("
+NumericVector gibbs_exponential_cpp(NumericVector y, double alpha, double beta, int n_iter) {
+   int n = y.size();                  // Number of observations
+   double sum_y = sum(y);             // Sufficient statistic
+   NumericVector lambda_samples(n_iter); // Output vector for lambda samples
+   for (int i = 0; i < n_iter; ++i) {
+     // Update posterior parameters
+     double alpha_post = alpha + n;
+     double beta_post = beta + sum_y;
+     // Sample from Gamma distribution
+     lambda_samples[i] = R::rgamma(alpha_post, 1.0 / beta_post); // Gamma(shape, scale)
+   }
+
+   return lambda_samples;
+}
+")
+
+# Define parameters and data
+set.seed(123)
+y <- rexp(100, rate = 2)  # Generate data
+alpha <- 1
+beta <- 1
+n_iter <- 1000
+# Benchmark the two functions
+benchmark_results <- microbenchmark(
+  R_function = gibbs_exponential_R(y, alpha, beta, n_iter),
+  Rcpp_function = gibbs_exponential_cpp(y, alpha, beta, n_iter),
+  times = 10  # Number of iterations to average timing
+)
+# Print benchmark results
+print(benchmark_results)
+# Plot the results
+boxplot(benchmark_results, main = "Comparison of R and Rcpp Functions", ylab = "Time (ms)")
+
+```
+
+
+```{r}
+
+cppFunction("
+NumericVector bayesian_poisson_gamma_cpp(NumericVector data, double alpha_prior, double beta_prior, int n_iter = 10000) {
+  int n = data.size();               // Number of observations
+  double sum_data = sum(data);       // Sum of observed data
+  NumericVector lambda_samples(n_iter);  // Vector to store posterior samples
+  // Initial guess for lambda
+  double lambda_current = 1.0;
+  // Gibbs sampling loop
+  for (int i = 0; i < n_iter; i++) {
+    // Posterior shape parameter is alpha + sum(y)
+    double posterior_shape = alpha_prior + sum_data;
+    // Posterior scale parameter is beta_prior + n (number of data points)
+    double posterior_scale = 1.0 / (1.0 / beta_prior + n);
+    // Sample lambda from the posterior Gamma distribution
+    lambda_current = R::rgamma(posterior_shape, posterior_scale);
+    // Store the sampled value of lambda
+    lambda_samples[i] = lambda_current;
+  }
+  return lambda_samples;
+}
+")
+
+# Generate sample data
+set.seed(123)
+data <- rpois(100, lambda = 3)
+alpha_prior <- 2
+beta_prior <- 1
+# Run the comparison between the two implementations
+benchmark_result <- microbenchmark(
+  bayesian_poisson_gamma_R(data, alpha_prior, beta_prior, n_iter = 10000),
+  bayesian_poisson_gamma_cpp(data, alpha_prior, beta_prior, n_iter = 10000),
+  times = 10
+)
+# Print the result
+print(benchmark_result)
+```
+
+
